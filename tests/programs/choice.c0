@@ -1,0 +1,32 @@
+#use <conio>
+
+choice shape {
+  Circle(int radius);
+  Square(int side);
+  Rect(int w, int h);
+};
+
+int area(choice shape s) {
+  match (s) {
+    Circle(r) => { return r * r * 3; }
+    Square(side) => { return side * side; }
+    Rect(w, h) => { return w * h; }
+  }
+  return 0;
+}
+
+int main() {
+  choice shape c = Circle(5);
+  printint(area(c));
+  println("");
+
+  choice shape sq = Square(4);
+  printint(area(sq));
+  println("");
+
+  choice shape rc = Rect(3, 7);
+  printint(area(rc));
+  println("");
+
+  return 0;
+}

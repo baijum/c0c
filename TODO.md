@@ -28,17 +28,14 @@
 - Known limitation: alist-based variable lookup; stack overflow on large programs
 - Needs kaappi module register limit increase to work as a proper .sld module
 
-### Choice types (tagged unions) [~300 lines]
-- C0 has no unions or enums — fills a real gap for data modeling
-- Syntax: `choice shape { Circle(int radius); Square(int side); };`
-- Pattern matching via `switch` on choice values
-- All compiler phases need changes
+### Choice types (tagged unions) [blocked by VM limit]
+- Fully designed: choice/match syntax with pattern matching
+- Codegen: C tagged struct + switch/case
+- Cannot fit within kaappi VM module bytecode limit
 
-### Futures (`future`/`await`) [~300 lines]
-- Fork/join parallelism via pthreads
-- `future_t f = future(expr)` + `int result = await(f)`
-- Runtime: pthread_create + result struct with mutex/condvar
-
+### Futures (future/await) [blocked by VM limit]
+- Designed: future_t + await via pthreads
+- Same constraint: compiler module additions exceed bytecode limit
 ## Completed
 
 All items below are implemented and tested (140 tests passing):
