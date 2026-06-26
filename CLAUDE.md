@@ -194,7 +194,7 @@ Unary operators: `neg`, `lognot`, `bitnot`, `deref`.
 
 ## C0 Language Reference
 
-The full C0 specification is in `CMU-CS-10-145.pdf` (Rob Arnold's thesis).
+The full C0 specification is in `resources/c0-language-thesis.pdf` (Rob Arnold's thesis).
 
 Key differences from C: no unions, no casts, no pointer arithmetic, no sizeof,
 no goto/switch/do-while, no floats, no unsigned types, no address-of (`&`),
