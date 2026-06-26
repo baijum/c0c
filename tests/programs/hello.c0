@@ -1,0 +1,5 @@
+int main() {
+  printint(42);
+  println("");
+  return 0;
+}

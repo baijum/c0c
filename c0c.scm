@@ -1,0 +1,81 @@
+(import (scheme base) (scheme file) (scheme write)
+        (scheme process-context)
+        (c0c driver))
+
+(define libc (ffi-open #f))
+(define c-system (ffi-fn libc "system" '(string) 'int))
+
+(define (run-command cmd)
+  (let ((rc (c-system cmd)))
+    (unless (= rc 0)
+      (error "c0c: command failed" cmd rc))))
+
+(define (usage)
+  (display "Usage: kaappi c0c.scm <file.c0> [options]\n")
+  (display "Options:\n")
+  (display "  -o <file>        Output binary name (default: a.out)\n")
+  (display "  --emit-c         Stop after C emission\n")
+  (display "  --target <T>     Cross-compile target (e.g. x86_64-linux)\n")
+  (display "  --runtime <dir>  Path to c0c runtime directory\n")
+  (newline)
+  (exit 1))
+
+(define (path-directory path)
+  (let ((len (string-length path)))
+    (let loop ((i (- len 1)))
+      (cond
+        ((< i 0) ".")
+        ((char=? (string-ref path i) #\/) (substring path 0 i))
+        (else (loop (- i 1)))))))
+
+(define (parse-args args)
+  (let loop ((args args) (source #f) (output "a.out")
+             (emit-c #f) (target #f) (runtime-dir #f) (no-check #f))
+    (cond
+      ((null? args)
+       (unless source (usage))
+       (values source output emit-c target runtime-dir no-check))
+      ((string=? (car args) "-o")
+       (when (null? (cdr args)) (usage))
+       (loop (cddr args) source (cadr args) emit-c target runtime-dir no-check))
+      ((string=? (car args) "--emit-c")
+       (loop (cdr args) source output #t target runtime-dir no-check))
+      ((string=? (car args) "--target")
+       (when (null? (cdr args)) (usage))
+       (loop (cddr args) source output emit-c (cadr args) runtime-dir no-check))
+      ((string=? (car args) "--runtime")
+       (when (null? (cdr args)) (usage))
+       (loop (cddr args) source output emit-c target (cadr args) no-check))
+      ((string=? (car args) "--no-check")
+       (loop (cdr args) source output emit-c target runtime-dir #t))
+      ((or (string=? (car args) "-h") (string=? (car args) "--help"))
+       (usage))
+      (else
+       (when source (usage))
+       (loop (cdr args) (car args) output emit-c target runtime-dir no-check)))))
+
+(let ((args (cddr (command-line))))
+  (when (null? args) (usage))
+  (call-with-values
+    (lambda () (parse-args args))
+    (lambda (source output emit-c target runtime-dir no-check)
+      (let* ((c-code (compile-c0-to-c source no-check))
+             (c-file (string-append output ".c")))
+        (let ((out (open-output-file c-file)))
+          (write-string c-code out)
+          (close-output-port out))
+        (if emit-c
+            (begin (display "Wrote ") (display c-file) (newline))
+            (let* ((script-dir (path-directory source))
+                   (rt-dir (or runtime-dir
+                               (string-append script-dir "/runtime")))
+                   (cmd (string-append
+                          "zig cc -O0 -fwrapv -std=c11 "
+                          "-I" rt-dir " "
+                          (if target
+                              (string-append "-target " target " ")
+                              "")
+                          c-file " " rt-dir "/c0rt.c "
+                          "-o " output)))
+              (run-command cmd)
+              (delete-file c-file)))))))

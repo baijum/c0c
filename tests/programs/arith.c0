@@ -1,0 +1,54 @@
+int main() {
+  int x = 10;
+  int y = 3;
+
+  printint(x + y);
+  println("");
+
+  printint(x - y);
+  println("");
+
+  printint(x * y);
+  println("");
+
+  printint(x / y);
+  println("");
+
+  printint(x % y);
+  println("");
+
+  int z = 0;
+  z = x;
+  z += 5;
+  printint(z);
+  println("");
+
+  printint(-x);
+  println("");
+
+  printint(~0);
+  println("");
+
+  int a = 1;
+  a <<= 4;
+  printint(a);
+  println("");
+
+  printint(a >> 2);
+  println("");
+
+  int b = 5;
+  printint(b & 3);
+  println("");
+
+  printint(b | 2);
+  println("");
+
+  printint(b ^ 3);
+  println("");
+
+  printint(0xFF);
+  println("");
+
+  return 0;
+}

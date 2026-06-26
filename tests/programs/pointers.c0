@@ -1,0 +1,37 @@
+int main() {
+  int* p = alloc(int);
+  *p = 42;
+  printint(*p);
+  println("");
+
+  int* q = alloc(int);
+  *q = *p + 8;
+  printint(*q);
+  println("");
+
+  bool* bp = alloc(bool);
+  *bp = true;
+  if (*bp) {
+    printint(1);
+  } else {
+    printint(0);
+  }
+  println("");
+
+  int* r = NULL;
+  if (r == NULL) {
+    printint(1);
+  } else {
+    printint(0);
+  }
+  println("");
+
+  int* s = alloc(int);
+  *s = 100;
+  int* t = s;
+  *t = *t + 1;
+  printint(*s);
+  println("");
+
+  return 0;
+}

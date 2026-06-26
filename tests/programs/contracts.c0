@@ -1,0 +1,38 @@
+int abs(int x)
+//@requires true;
+//@ensures true;
+{
+  if (x < 0) {
+    return -x;
+  }
+  return x;
+}
+
+int sum_positive(int[] a, int n)
+//@requires n > 0;
+{
+  int s = 0;
+  for (int i = 0; i < n; i++)
+  //@loop_invariant i >= 0;
+  {
+    //@assert i < n;
+    s += a[i];
+  }
+  return s;
+}
+
+int main() {
+  printint(abs(-5));
+  println("");
+  printint(abs(3));
+  println("");
+
+  int[] arr = alloc_array(int, 3);
+  arr[0] = 10;
+  arr[1] = 20;
+  arr[2] = 30;
+  printint(sum_positive(arr, 3));
+  println("");
+
+  return 0;
+}

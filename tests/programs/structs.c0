@@ -1,0 +1,59 @@
+struct point {
+  int x;
+  int y;
+};
+
+struct node {
+  int val;
+  struct node* next;
+};
+
+int distance_sq(struct point* p, struct point* q) {
+  int dx = p->x - q->x;
+  int dy = p->y - q->y;
+  return dx * dx + dy * dy;
+}
+
+int list_sum(struct node* head) {
+  int sum = 0;
+  struct node* cur = head;
+  while (cur != NULL) {
+    sum += cur->val;
+    cur = cur->next;
+  }
+  return sum;
+}
+
+int main() {
+  struct point* p = alloc(struct point);
+  p->x = 3;
+  p->y = 4;
+  printint(p->x);
+  println("");
+
+  printint(p->y);
+  println("");
+
+  struct point* q = alloc(struct point);
+  q->x = 0;
+  q->y = 0;
+  printint(distance_sq(p, q));
+  println("");
+
+  struct node* a = alloc(struct node);
+  a->val = 10;
+  a->next = NULL;
+
+  struct node* b = alloc(struct node);
+  b->val = 20;
+  b->next = a;
+
+  struct node* c = alloc(struct node);
+  c->val = 30;
+  c->next = b;
+
+  printint(list_sum(c));
+  println("");
+
+  return 0;
+}

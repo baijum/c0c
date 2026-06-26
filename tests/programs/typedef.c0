@@ -1,0 +1,33 @@
+typedef int number;
+typedef int* intptr;
+
+struct pair {
+  number fst;
+  number snd;
+};
+
+typedef struct pair* pair_t;
+
+number add(number a, number b) {
+  return a + b;
+}
+
+int main() {
+  number x = 10;
+  number y = 20;
+  printint(add(x, y));
+  println("");
+
+  intptr p = alloc(int);
+  *p = 42;
+  printint(*p);
+  println("");
+
+  pair_t pr = alloc(struct pair);
+  pr->fst = 100;
+  pr->snd = 200;
+  printint(pr->fst + pr->snd);
+  println("");
+
+  return 0;
+}

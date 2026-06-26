@@ -1,0 +1,43 @@
+int main() {
+  int[] a = alloc_array(int, 5);
+  a[0] = 10;
+  a[1] = 20;
+  a[2] = 30;
+  a[3] = 40;
+  a[4] = 50;
+
+  printint(a[0]);
+  println("");
+
+  printint(a[4]);
+  println("");
+
+  int sum = 0;
+  for (int i = 0; i < 5; i++) {
+    sum += a[i];
+  }
+  printint(sum);
+  println("");
+
+  bool[] flags = alloc_array(bool, 3);
+  flags[0] = true;
+  flags[1] = false;
+  flags[2] = true;
+  int count = 0;
+  for (int j = 0; j < 3; j++) {
+    if (flags[j]) {
+      count++;
+    }
+  }
+  printint(count);
+  println("");
+
+  int[] b = alloc_array(int, 10);
+  for (int k = 0; k < 10; k++) {
+    b[k] = k * k;
+  }
+  printint(b[7]);
+  println("");
+
+  return 0;
+}

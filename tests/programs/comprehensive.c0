@@ -1,0 +1,123 @@
+typedef int number;
+
+struct list {
+  number val;
+  struct list* next;
+};
+
+typedef struct list* list_t;
+
+list_t cons(number v, list_t tail) {
+  list_t node = alloc(struct list);
+  node->val = v;
+  node->next = tail;
+  return node;
+}
+
+number list_length(list_t l)
+//@requires true;
+{
+  number len = 0;
+  list_t cur = l;
+  while (cur != NULL) {
+    len++;
+    cur = cur->next;
+  }
+  return len;
+}
+
+number list_sum(list_t l) {
+  number s = 0;
+  list_t cur = l;
+  while (cur != NULL) {
+    s += cur->val;
+    cur = cur->next;
+  }
+  return s;
+}
+
+number factorial(number n)
+//@requires n >= 0;
+{
+  number result = 1;
+  for (number i = 1; i <= n; i++)
+  //@loop_invariant i >= 1;
+  {
+    result *= i;
+  }
+  return result;
+}
+
+bool is_sorted(int[] a, int n) {
+  for (int i = 0; i < n - 1; i++) {
+    if (a[i] > a[i + 1]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void swap(int[] a, int i, int j) {
+  int tmp = a[i];
+  a[i] = a[j];
+  a[j] = tmp;
+}
+
+void bubble_sort(int[] a, int n) {
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < n - i - 1; j++) {
+      if (a[j] > a[j + 1]) {
+        swap(a, j, j + 1);
+      }
+    }
+  }
+}
+
+int main() {
+  list_t l = cons(10, cons(20, cons(30, NULL)));
+  printint(list_length(l));
+  println("");
+
+  printint(list_sum(l));
+  println("");
+
+  printint(factorial(6));
+  println("");
+
+  int[] arr = alloc_array(int, 5);
+  arr[0] = 5;
+  arr[1] = 3;
+  arr[2] = 8;
+  arr[3] = 1;
+  arr[4] = 4;
+
+  printint(is_sorted(arr, 5) ? 1 : 0);
+  println("");
+
+  bubble_sort(arr, 5);
+
+  printint(is_sorted(arr, 5) ? 1 : 0);
+  println("");
+
+  for (int i = 0; i < 5; i++) {
+    printint(arr[i]);
+    if (i < 4) { print(" "); }
+  }
+  println("");
+
+  string greeting = string_join("Hello", " C0!");
+  print(greeting);
+  println("");
+
+  printint(0xCAFE & 0xFF);
+  println("");
+
+  int x = 1 << 10;
+  printint(x);
+  println("");
+
+  printint(17 / 5);
+  println("");
+
+  return 0;
+}

@@ -1,0 +1,24 @@
+int main() {
+  string s = "hello";
+  printint(string_length(s));
+  println("");
+
+  string t = string_join(s, " world");
+  print(t);
+  println("");
+
+  printint(string_charat(s, 1) == 'e' ? 1 : 0);
+  println("");
+
+  string sub = string_sub(t, 0, 5);
+  print(sub);
+  println("");
+
+  printint(string_equal(s, sub) ? 1 : 0);
+  println("");
+
+  printint(string_compare("abc", "def"));
+  println("");
+
+  return 0;
+}

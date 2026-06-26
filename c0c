@@ -1,0 +1,8 @@
+#!/bin/sh
+# c0c — C0 to native compiler
+# Usage: c0c <file.c0> [-o output] [--target T] [--emit-c] [--no-check]
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+KAAPPI="${KAAPPI:-kaappi}"
+
+exec "$KAAPPI" --no-jit --lib-path "$SCRIPT_DIR/lib" "$SCRIPT_DIR/c0c.scm" "$@" --runtime "$SCRIPT_DIR/runtime"
