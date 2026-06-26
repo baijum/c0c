@@ -14,10 +14,10 @@
 (define cl (command-line))
 
 (define scan-dir
-  (if (>= (length cl) 3) (list-ref cl 2) "src"))
+  (if (>= (length cl) 3) (list-ref cl 2) "."))
 
 (define scan-ext
-  (if (>= (length cl) 4) (list-ref cl 3) ".zig"))
+  (if (>= (length cl) 4) (list-ref cl 3) ".scm"))
 
 (define (count-lines filename)
   (if (file-exists? filename)
