@@ -121,6 +121,15 @@ run_test "matrix multiply" "$C0C_DIR/tests/programs/matrix.c0" \
 139 154
 3"
 
+run_test "parse library" "$C0C_DIR/tests/programs/parse.c0" \
+"42
+255
+63
+bad int: NULL
+true
+false
+bad bool: NULL"
+
 run_test "comprehensive" "$C0C_DIR/tests/programs/comprehensive.c0" \
 "3
 60

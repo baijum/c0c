@@ -18,9 +18,9 @@
 - Requires pointer-to-pointer support in the type checker
 
 ### parse library
-- [ ] `struct parsed_bool *parse_bool(string s)` — parse "true"/"false"
-- [ ] `struct parsed_int *parse_int(string s, int base)` — parse integer (base 8/10/16)
-- Runtime: implement `parsed_bool` and `parsed_int` structs in c0rt.h
+- [x] `struct parsed_bool *parse_bool(string s)` — parse "true"/"false"
+- [x] `struct parsed_int *parse_int(string s, int base)` — parse integer (base 8/10/16)
+- Done: `parsed_bool`/`parsed_int` structs + functions in c0rt.h/c0rt.c, signatures in stdlib.sld, checker registers structs for `#use <parse>`
 
 ### string library (missing functions)
 - [ ] `c0_array* string_to_chararray(c0_string s)` — convert string to char[]

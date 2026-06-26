@@ -161,6 +161,21 @@
 (check-rejects "unknown library"
   "#use <unknown>\nint main() { return 0; }")
 
+(check-accepts "#use parse allows parse_int"
+  "#use <parse>\nint main() { struct parsed_int* p = parse_int(\"42\", 10); return 0; }")
+
+(check-accepts "#use parse allows parse_bool"
+  "#use <parse>\nint main() { struct parsed_bool* p = parse_bool(\"true\"); return 0; }")
+
+(check-accepts "#use parse allows field access on result"
+  "#use <conio>\n#use <parse>\nint main() { struct parsed_int* p = parse_int(\"1\", 10); if (p != NULL) { printint(p->result); } return 0; }")
+
+(check-rejects "parse_int without #use parse"
+  "int main() { struct parsed_int* p = parse_int(\"42\", 10); return 0; }")
+
+(check-rejects "parse_bool without #use parse"
+  "int main() { struct parsed_bool* p = parse_bool(\"true\"); return 0; }")
+
 (display "\nReturn checking:\n")
 
 (check-rejects "missing return"

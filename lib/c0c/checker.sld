@@ -519,6 +519,11 @@
               (error (string-append "c0c type error: unknown library: " lib))))
           used-libs)
         (register-libraries-for! funcs used-libs)
+        (when (member "parse" used-libs)
+          (hash-table-set! structs "parsed_bool"
+            (list (list '(ty-bool) "result")))
+          (hash-table-set! structs "parsed_int"
+            (list (list '(ty-int) "result"))))
         (for-each
           (lambda (decl)
             (case (car decl)

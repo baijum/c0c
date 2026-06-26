@@ -81,6 +81,18 @@ void printint(int32_t i) {
     printf("%d", i);
 }
 
+void printbool(bool b) {
+    fputs(b ? "true" : "false", stdout);
+}
+
+void printchar(char c) {
+    putchar(c);
+}
+
+bool eof(void) {
+    return feof(stdin) != 0;
+}
+
 c0_string readline(void) {
     char buf[1024];
     if (!fgets(buf, sizeof(buf), stdin)) return "";
@@ -160,6 +172,29 @@ int32_t char_ord(char c) { return (int32_t)(unsigned char)c; }
 char char_chr(int32_t n) {
     if (n < 0 || n > 127) c0_abort("char_chr: out of ASCII range");
     return (char)n;
+}
+
+struct parsed_bool* parse_bool(c0_string s) {
+    if (!s) c0_abort("NULL string in parse_bool");
+    if (strcmp(s, "true") != 0 && strcmp(s, "false") != 0) return NULL;
+    struct parsed_bool* p = malloc(sizeof(struct parsed_bool));
+    if (!p) c0_abort("out of memory");
+    p->result = (strcmp(s, "true") == 0);
+    return p;
+}
+
+struct parsed_int* parse_int(c0_string s, int32_t base) {
+    if (!s) c0_abort("NULL string in parse_int");
+    if (base != 8 && base != 10 && base != 16) return NULL;
+    if (*s == '\0') return NULL;
+    char* endptr;
+    long val = strtol(s, &endptr, base);
+    if (*endptr != '\0') return NULL;
+    if (val < INT32_MIN || val > INT32_MAX) return NULL;
+    struct parsed_int* p = malloc(sizeof(struct parsed_int));
+    if (!p) c0_abort("out of memory");
+    p->result = (int32_t)val;
+    return p;
 }
 
 int main(void) {

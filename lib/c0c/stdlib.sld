@@ -33,9 +33,19 @@
         (cons "char_ord" (cons '(ty-int) (list '(ty-char))))
         (cons "char_chr" (cons '(ty-char) (list '(ty-int))))))
 
+    (define parse-signatures
+      (list
+        (cons "parse_bool"
+              (cons '(ty-ptr (ty-struct "parsed_bool"))
+                    (list '(ty-string))))
+        (cons "parse_int"
+              (cons '(ty-ptr (ty-struct "parsed_int"))
+                    (list '(ty-string) '(ty-int))))))
+
     (define all-libraries
       (list (cons "conio" conio-signatures)
-            (cons "string" string-signatures)))
+            (cons "string" string-signatures)
+            (cons "parse" parse-signatures)))
 
     (define all-signatures
       (append conio-signatures string-signatures))
@@ -44,10 +54,13 @@
       (let ((ht (make-hash-table string=? string-hash)))
         (for-each (lambda (entry) (hash-table-set! ht (car entry) #t))
           all-signatures)
+        (for-each (lambda (entry) (hash-table-set! ht (car entry) #t))
+          parse-signatures)
         (for-each (lambda (name) (hash-table-set! ht name #t))
           '("string_from_chararray" "string_to_chararray"
             "c0_array_length"))
         ht))
+
 
     (define (register-library-funcs! funcs)
       (for-each

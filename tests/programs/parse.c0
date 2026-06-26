@@ -1,0 +1,46 @@
+#use <conio>
+#use <parse>
+
+int main() {
+  struct parsed_int* p = parse_int("42", 10);
+  if (p != NULL) {
+    printint(p->result);
+    println("");
+  }
+
+  struct parsed_int* hex = parse_int("ff", 16);
+  if (hex != NULL) {
+    printint(hex->result);
+    println("");
+  }
+
+  struct parsed_int* oct = parse_int("77", 8);
+  if (oct != NULL) {
+    printint(oct->result);
+    println("");
+  }
+
+  struct parsed_int* bad = parse_int("abc", 10);
+  if (bad == NULL) {
+    println("bad int: NULL");
+  }
+
+  struct parsed_bool* bt = parse_bool("true");
+  if (bt != NULL) {
+    printbool(bt->result);
+    println("");
+  }
+
+  struct parsed_bool* bf = parse_bool("false");
+  if (bf != NULL) {
+    printbool(bf->result);
+    println("");
+  }
+
+  struct parsed_bool* bb = parse_bool("yes");
+  if (bb == NULL) {
+    println("bad bool: NULL");
+  }
+
+  return 0;
+}

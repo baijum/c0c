@@ -34,6 +34,9 @@ void c0_abort(const char* msg);
 void print(c0_string s);
 void println(c0_string s);
 void printint(int32_t i);
+void printbool(bool b);
+void printchar(char c);
+bool eof(void);
 c0_string readline(void);
 
 int32_t string_length(c0_string s);
@@ -47,6 +50,11 @@ c0_string string_frombool(bool b);
 c0_string string_fromchar(char c);
 int32_t char_ord(char c);
 char char_chr(int32_t n);
+
+struct parsed_bool { bool result; };
+struct parsed_int { int32_t result; };
+struct parsed_bool* parse_bool(c0_string s);
+struct parsed_int* parse_int(c0_string s, int32_t base);
 
 int32_t _c0_main(void);
 
