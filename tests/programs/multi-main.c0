@@ -1,0 +1,7 @@
+#use <conio>
+
+int main() {
+  printint(square(7));
+  println("");
+  return 0;
+}

@@ -133,7 +133,10 @@
                             (and (ptr-type? lt) (equal? rr '(ty-ptr (ty-void))))
                             (and (equal? rl '(ty-ptr (ty-void))) (ptr-type? rt))
                             (and (arr-type? lt) (arr-type? rt)))
-                  (check-error "equality requires comparable types" expr))
+                  (check-error
+                    (if (or (struct-type? rl) (struct-type? rr))
+                        "cannot compare struct values; use pointers"
+                        "equality requires comparable types") expr))
                 '(ty-bool)))
              ((amp-amp pipe-pipe)
               (unless (and (bool-type? lt) (bool-type? rt))

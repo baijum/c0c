@@ -283,6 +283,59 @@ run_cross_test() {
 
 run_cross_test "cross-compile emit-c" "$C0C_DIR/tests/programs/hello.c0"
 
+run_multi_test() {
+    local name="$1"
+    shift
+    local expected="$1"
+    shift
+
+    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
+        "$@" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" 2>/dev/null; then
+        local actual
+        actual=$(/tmp/c0c-test-$$ 2>&1)
+        if [ "$actual" = "$expected" ]; then
+            echo "  PASS: $name"
+            PASS=$((PASS + 1))
+        else
+            echo "  FAIL: $name"
+            FAIL=$((FAIL + 1))
+        fi
+    else
+        echo "  FAIL: $name (compilation failed)"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "/tmp/c0c-test-$$" "/tmp/c0c-test-$$.c"
+}
+
+run_multi_test "multiple source files" "49" \
+    "$C0C_DIR/tests/programs/multi-lib.c0" "$C0C_DIR/tests/programs/multi-main.c0"
+
+run_cross_binary_test() {
+    local name="$1"
+    local c0_file="$2"
+    local target="$3"
+    local expect_fmt="$4"
+
+    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
+        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" \
+        --target "$target" 2>/dev/null; then
+        if file "/tmp/c0c-test-$$" | grep -q "$expect_fmt"; then
+            echo "  PASS: $name"
+            PASS=$((PASS + 1))
+        else
+            echo "  FAIL: $name (wrong format)"
+            FAIL=$((FAIL + 1))
+        fi
+    else
+        echo "  FAIL: $name (compilation failed)"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "/tmp/c0c-test-$$" "/tmp/c0c-test-$$.c"
+}
+
+run_cross_binary_test "cross-compile x86_64-linux" \
+    "$C0C_DIR/tests/programs/hello.c0" "x86_64-linux" "ELF 64-bit"
+
 run_error_test "undeclared variable rejects" "$C0C_DIR/tests/programs/err-undeclared.c0" \
     "ExceptionRaised"
 

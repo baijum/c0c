@@ -121,6 +121,54 @@
 (check-rejects "comparison of bool"
   "int main() { bool b = true < false; return 0; }")
 
+(check-rejects "unary neg on bool"
+  "int main() { int x = -true; return 0; }")
+
+(check-rejects "logical not on int"
+  "int main() { bool b = !42; return 0; }")
+
+(check-rejects "ternary with int condition"
+  "int main() { int x = 42 ? 1 : 2; return 0; }")
+
+(check-rejects "ternary branches differ"
+  "int main() { int x = true ? 1 : true; return 0; }")
+
+(check-rejects "array index must be int"
+  "int main() { int[] a = alloc_array(int, 5); int x = a[true]; return 0; }")
+
+(check-rejects "alloc_array count must be int"
+  "int main() { int[] a = alloc_array(int, true); return 0; }")
+
+(check-rejects "struct as local variable"
+  "struct pt { int x; };\nint main() { struct pt p; return 0; }")
+
+(check-rejects "struct equality"
+  "struct pt { int x; };\nint main() { struct pt* a = alloc(struct pt); struct pt* b = alloc(struct pt); bool eq = (*a == *b); return 0; }")
+
+(check-rejects "assignment target must be lvalue"
+  "int main() { 42 = 1; return 0; }")
+
+(check-rejects "compound assign requires int"
+  "int main() { bool b = true; b += 1; return 0; }")
+
+(check-rejects "postop requires int"
+  "int main() { bool b = true; b++; return 0; }")
+
+(check-rejects "for condition must be bool"
+  "int main() { for (int i = 0; 1; i++) {} return 0; }")
+
+(check-rejects "field access on non-pointer"
+  "int main() { int x = 5; int y = x->foo; return 0; }")
+
+(check-rejects "field on non-struct pointer"
+  "int main() { int* p = alloc(int); int y = p->foo; return 0; }")
+
+(check-rejects "no such field"
+  "struct pt { int x; };\nint main() { struct pt* p = alloc(struct pt); int y = p->z; return 0; }")
+
+(check-rejects "variable already declared"
+  "int main() { int x = 1; int x = 2; return 0; }")
+
 (display "\nDefinedness analysis:\n")
 
 (check-rejects "use before assign"
