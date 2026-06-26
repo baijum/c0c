@@ -4,7 +4,7 @@
   (export emit-c-program)
   (begin
 
-    (define emit-contracts #t)
+    (define contract-level 2)
     (define chunks '())
     (define var-types (make-hash-table string=? string-hash))
     (define cur-ensures '())
@@ -90,6 +90,9 @@
              ((rshift)
               (emit "c0_ishr(") (emit-expr lhs) (emit ", ")
               (emit-expr rhs) (emit ")"))
+             ((implies)
+              (emit "(!(") (emit-expr lhs) (emit ") || (")
+              (emit-expr rhs) (emit "))"))
              (else
               (emit-expr lhs)
               (emit " " (binop->c-str op) " ")
@@ -98,7 +101,10 @@
          (let ((op (cadr expr))
                (operand (list-ref expr 2)))
            (case op
-             ((neg) (emit "(-(") (emit-expr operand) (emit "))"))
+             ((neg)
+              (if (and (eq? (car operand) 'e-int) (= (cadr operand) 2147483648))
+                  (emit "(-2147483647 - 1)")
+                  (begin (emit "c0_ineg(") (emit-expr operand) (emit ")"))))
              ((lognot) (emit "(!(") (emit-expr operand) (emit "))"))
              ((bitnot) (emit "(~(") (emit-expr operand) (emit "))"))
              ((deref)
@@ -253,10 +259,15 @@
          (let ((lhs (cadr stmt))
                (op (list-ref stmt 2))
                (rhs (list-ref stmt 3)))
-           (emit-expr lhs)
-           (emit " " (assign-op->c-str op) " ")
-           (emit-expr rhs)
-           (emit ";\n")))
+           (let ((safe (case op
+                         ((asgn-slash) "c0_idiv") ((asgn-percent) "c0_imod")
+                         ((asgn-lshift) "c0_ishl") ((asgn-rshift) "c0_ishr")
+                         (else #f))))
+             (if safe
+                 (begin (emit-expr lhs) (emit " = " safe "(")
+                        (emit-expr lhs) (emit ", ") (emit-expr rhs) (emit ");\n"))
+                 (begin (emit-expr lhs) (emit " " (assign-op->c-str op) " ")
+                        (emit-expr rhs) (emit ";\n"))))))
         ((s-postop)
          (let ((lhs (cadr stmt))
                (op (list-ref stmt 2)))
@@ -266,7 +277,7 @@
         ((s-return)
          (let ((expr (cadr stmt)))
            (cond
-             ((and expr emit-contracts (pair? cur-ensures))
+             ((and expr (> contract-level 0) (pair? cur-ensures))
               (emit-type cur-ret-ty) (emit " _c0_result = ") (emit-expr expr) (emit ";\n")
               (for-each (lambda (e) (emit-indent depth) (emit-assert e)) cur-ensures)
               (emit-indent depth) (emit "return _c0_result;\n"))
@@ -302,8 +313,10 @@
         ((s-break) (emit "break;\n"))
         ((s-continue) (emit "continue;\n"))
         ((s-ensures) #t)
-        ((s-assert s-requires s-loop-invariant)
-         (when emit-contracts (emit-assert stmt)))
+        ((s-requires)
+         (when (>= contract-level 1) (emit-assert stmt)))
+        ((s-assert s-loop-invariant)
+         (when (>= contract-level 2) (emit-assert stmt)))
         (else (error "c0c codegen: unknown stmt" (car stmt)))))
 
     (define (emit-for-part s)
@@ -345,7 +358,7 @@
                  (emit-type ret-type) (emit " " (mangle name) "(")
                  (emit-params params)
                  (emit ") ")
-                 (if (and emit-contracts (pair? cur-ensures))
+                 (if (and (> contract-level 0) (pair? cur-ensures))
                      (begin
                        (emit "{\n")
                        (emit-old-captures cur-ensures)
@@ -387,8 +400,9 @@
               (loop (cdr p) #f)))))
 
     (define (emit-c-program ast . opts)
-      (set! emit-contracts
-        (not (and (pair? opts) (car opts))))
+      (set! contract-level
+        (if (pair? opts) (car opts) 2))
+      (when (< contract-level 0) (set! contract-level 0))
       (set! chunks '())
       (emit "#include \"c0rt.h\"\n\n")
       (for-each (lambda (d)

@@ -23,6 +23,7 @@ int32_t c0_array_length(c0_array* arr);
 void* c0_alloc(size_t size);
 void* c0_deref(void* ptr);
 
+int32_t c0_ineg(int32_t a);
 int32_t c0_idiv(int32_t a, int32_t b);
 int32_t c0_imod(int32_t a, int32_t b);
 int32_t c0_ishl(int32_t a, int32_t b);

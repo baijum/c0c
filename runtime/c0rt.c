@@ -53,6 +53,11 @@ int32_t c0_array_length(c0_array* arr) {
     return arr->count;
 }
 
+int32_t c0_ineg(int32_t a) {
+    if (a == INT32_MIN) c0_abort("integer overflow in negation");
+    return -a;
+}
+
 int32_t c0_idiv(int32_t a, int32_t b) {
     if (b == 0) c0_abort("division by zero");
     if (a == INT32_MIN && b == -1) c0_abort("integer overflow in division");

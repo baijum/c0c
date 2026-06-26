@@ -70,7 +70,8 @@
             (op-caret . 6)
             (op-pipe . 5)
             (op-amp-amp . 4)
-            (op-pipe-pipe . 3)))
+            (op-pipe-pipe . 3)
+            (op-implies . 2)))
         ht))
 
     (define (binary-op? tag)

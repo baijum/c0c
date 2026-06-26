@@ -5,7 +5,7 @@
   (begin
 
     (define (compile-c0-to-c source-path . opts)
-      (let* ((no-check (and (pair? opts) (car opts)))
+      (let* ((chk-level (if (pair? opts) (car opts) 2))
              (src-text (and (pair? opts) (pair? (cdr opts)) (cadr opts)))
              (port (if src-text
                        (open-input-string src-text)
@@ -15,4 +15,4 @@
         (when (not src-text) (close-input-port port))
         (set-check-file! source-path)
         (check-program ast)
-        (emit-c-program ast no-check)))))
+        (emit-c-program ast chk-level)))))

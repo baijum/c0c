@@ -139,6 +139,15 @@
 (check-rejects "alloc_array count must be int"
   "int main() { int[] a = alloc_array(int, true); return 0; }")
 
+(check-accepts "char comparison"
+  "int main() { bool b = 'a' < 'z'; return 0; }")
+
+(check-rejects "variable shadowing"
+  "int main() { int x = 1; { int x = 2; } return 0; }")
+
+(check-accepts "implication operator in contract"
+  "int foo(int n, int[] a)\n//@requires n > 0 => a != NULL;\n{ return 0; }")
+
 (check-rejects "struct as local variable"
   "struct pt { int x; };\nint main() { struct pt p; return 0; }")
 

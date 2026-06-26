@@ -79,14 +79,19 @@
                               (make-tok 'int-lit
                                         (string->number hex-str 16)
                                         start-ln start-col)))))))
-              (let loop ((chars (list first-ch)))
-                (let ((ch (peek)))
-                  (if (and (not (eof-object? ch)) (char-numeric? ch))
-                      (begin (advance!) (loop (cons ch chars)))
-                      (make-tok 'int-lit
-                                (string->number
-                                  (list->string (reverse chars)))
-                                start-ln start-col))))))
+              (if (and (char=? first-ch #\0)
+                       (not (eof-object? (peek)))
+                       (char-numeric? (peek)))
+                  (error "c0c: leading zeros in decimal literal"
+                         filename start-ln start-col)
+                  (let loop ((chars (list first-ch)))
+                    (let ((ch (peek)))
+                      (if (and (not (eof-object? ch)) (char-numeric? ch))
+                          (begin (advance!) (loop (cons ch chars)))
+                          (make-tok 'int-lit
+                                    (string->number
+                                      (list->string (reverse chars)))
+                                    start-ln start-col)))))))
 
         (define (scan-escape)
           (let ((ch (advance!)))
@@ -100,6 +105,10 @@
               ((char=? ch #\') #\')
               ((char=? ch #\") #\")
               ((char=? ch #\b) (integer->char 8))
+              ((char=? ch #\v) (integer->char 11))
+              ((char=? ch #\f) (integer->char 12))
+              ((char=? ch #\a) (integer->char 7))
+              ((char=? ch #\?) #\?)
               (else (error "c0c: unknown escape" ch)))))
 
         (define (scan-string start-ln start-col)
@@ -294,9 +303,12 @@
 
                 ((char=? ch #\=)
                  (let ((nxt (peek)))
-                   (if (and (not (eof-object? nxt)) (char=? nxt #\=))
-                       (begin (advance!) (make-tok 'op-eq-eq #f line col))
-                       (make-tok 'op-assign #f line col))))
+                   (cond
+                     ((and (not (eof-object? nxt)) (char=? nxt #\=))
+                      (advance!) (make-tok 'op-eq-eq #f line col))
+                     ((and (not (eof-object? nxt)) (char=? nxt #\>))
+                      (advance!) (make-tok 'op-implies #f line col))
+                     (else (make-tok 'op-assign #f line col)))))
 
                 ((char=? ch #\<)
                  (let ((nxt (peek)))
