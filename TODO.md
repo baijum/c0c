@@ -21,11 +21,12 @@
 
 ## Future Features
 
-### C0VM bytecode backend [~800-1200 lines]
-- Emit `.bc0` bytecode instead of C code (new `--emit-bc0` flag)
-- C0VM is a stack machine with ~35 opcodes
-- Enables browser execution, sandboxed execution, step-through debugging
-- New `codegen-bc0.sld` (~400 lines) + `c0vm.sld` interpreter (~400 lines)
+### C0VM bytecode backend [DONE — c0c-bc0.scm]
+- Separate script: `kaappi --no-jit --lib-path lib c0c-bc0.scm hello.c0 -o hello`
+- Emits .bc0 text bytecode with magic, int/string/function/native pools
+- Handles all AST nodes, comparisons, short-circuit, backpatched jumps
+- Known limitation: alist-based variable lookup; stack overflow on large programs
+- Needs kaappi module register limit increase to work as a proper .sld module
 
 ### Choice types (tagged unions) [~300 lines]
 - C0 has no unions or enums — fills a real gap for data modeling
