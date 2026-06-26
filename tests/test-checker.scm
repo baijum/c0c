@@ -176,6 +176,20 @@
 (check-rejects "parse_bool without #use parse"
   "int main() { struct parsed_bool* p = parse_bool(\"true\"); return 0; }")
 
+(check-accepts "#use string allows string_to_chararray"
+  "#use <string>\nint main() { char[] a = string_to_chararray(\"hi\"); return 0; }")
+
+(check-accepts "#use string allows string_from_chararray"
+  "#use <string>\nint main() { char[] a = string_to_chararray(\"hi\"); string s = string_from_chararray(a); return 0; }")
+
+(display "\nContract special variables:\n")
+
+(check-accepts "\\result in @ensures"
+  "int foo(int x)\n//@ensures \\result >= 0;\n{ return x; }")
+
+(check-accepts "\\length in @requires"
+  "int sum(int[] a, int n)\n//@requires n == \\length(a);\n{ return 0; }")
+
 (display "\nReturn checking:\n")
 
 (check-rejects "missing return"

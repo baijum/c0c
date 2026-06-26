@@ -267,6 +267,8 @@
              (check-error "alloc_array count must be int" expr))
            (list 'ty-arr ty)))
 
+        ((e-result) current-ret-type)
+        ((e-length) (check-expr (cadr expr)) '(ty-int))
         (else (check-error "unknown expression form" expr))))
 
     (define (is-lvalue? expr)
@@ -520,10 +522,11 @@
           used-libs)
         (register-libraries-for! funcs used-libs)
         (when (member "parse" used-libs)
-          (hash-table-set! structs "parsed_bool"
-            (list (list '(ty-bool) "result")))
-          (hash-table-set! structs "parsed_int"
-            (list (list '(ty-int) "result"))))
+          (hash-table-set! structs "parsed_bool" (list (list '(ty-bool) "result")))
+          (hash-table-set! structs "parsed_int" (list (list '(ty-int) "result"))))
+        (when (member "string" used-libs)
+          (hash-table-set! funcs "string_to_chararray" (cons '(ty-arr (ty-char)) (list '(ty-string))))
+          (hash-table-set! funcs "string_from_chararray" (cons '(ty-string) (list '(ty-arr (ty-char))))))
         (for-each
           (lambda (decl)
             (case (car decl)

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.13.0
+
+      - name: Install Kaappi
+        run: |
+          curl -fsSL https://github.com/kaappi/kaappi/releases/latest/download/kaappi-linux-x86_64.tar.gz | tar xz
+          sudo mv kaappi /usr/local/bin/
+
+      - name: Run lexer tests
+        run: kaappi --lib-path lib tests/test-lexer.scm
+
+      - name: Run type checker tests
+        run: kaappi --no-jit --lib-path lib tests/test-checker.scm
+
+      - name: Run integration tests
+        run: bash tests/run-tests.sh

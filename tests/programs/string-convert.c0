@@ -1,0 +1,31 @@
+#use <conio>
+#use <string>
+
+int main() {
+  char[] a = string_to_chararray("hello");
+  printchar(a[0]);
+  printchar(a[4]);
+  println("");
+
+  a[0] = 'H';
+  string s = string_from_chararray(a);
+  println(s);
+
+  printint(string_length(string_fromint(12345)));
+  println("");
+
+  print(string_frombool(true));
+  print(" ");
+  println(string_frombool(false));
+
+  print(string_fromchar('Z'));
+  println("");
+
+  printint(char_ord('A'));
+  println("");
+
+  printchar(char_chr(97));
+  println("");
+
+  return 0;
+}

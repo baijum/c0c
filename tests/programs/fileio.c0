@@ -1,0 +1,12 @@
+#use <conio>
+#use <file>
+
+int main() {
+  file_t f = file_read("tests/programs/fileio-data.txt");
+  while (!file_eof(f)) {
+    string line = file_readline(f);
+    println(line);
+  }
+  file_close(f);
+  return 0;
+}

@@ -130,6 +130,20 @@ true
 false
 bad bool: NULL"
 
+run_test "string conversion" "$C0C_DIR/tests/programs/string-convert.c0" \
+"ho
+Hello
+5
+true false
+Z
+65
+a"
+
+run_test "ensures and \\result" "$C0C_DIR/tests/programs/ensures.c0" \
+"42
+7
+60"
+
 run_test "comprehensive" "$C0C_DIR/tests/programs/comprehensive.c0" \
 "3
 60
@@ -213,6 +227,32 @@ run_nocheck_test() {
 
 run_nocheck_test "--no-check skips requires" "$C0C_DIR/tests/programs/no-check.c0" \
     "division by zero"
+
+run_error_test() {
+    local name="$1"
+    local c0_file="$2"
+    local expected_msg="$3"
+
+    local err_out
+    err_out=$("$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
+        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" 2>&1; true)
+    if echo "$err_out" | grep -q "$expected_msg"; then
+        echo "  PASS: $name"
+        PASS=$((PASS + 1))
+    else
+        echo "  FAIL: $name"
+        echo "    expected error containing: $expected_msg"
+        echo "    actual: $err_out"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "/tmp/c0c-test-$$" "/tmp/c0c-test-$$.c"
+}
+
+run_error_test "undeclared variable rejects" "$C0C_DIR/tests/programs/err-undeclared.c0" \
+    "ExceptionRaised"
+
+run_error_test "type mismatch rejects" "$C0C_DIR/tests/programs/err-type-mismatch.c0" \
+    "ExceptionRaised"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

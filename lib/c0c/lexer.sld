@@ -366,6 +366,15 @@
                                      (else
                                       (lib-loop (cons c chars)))))))))))))
 
+                ((char=? ch #\\)
+                 (let lp ((cs '()))
+                   (let ((c (peek)))
+                     (if (and (not (eof-object? c)) (char-alphabetic? c))
+                         (begin (advance!) (lp (cons c cs)))
+                         (let ((w (list->string (reverse cs))))
+                           (cond ((string=? w "result") (make-tok 'bs-result #f line col))
+                                 ((string=? w "length") (make-tok 'bs-length #f line col))
+                                 (else (error "c0c: unknown \\keyword" w))))))))
                 (else
                  (error "c0c: unexpected character"
                         ch filename line col))))))
