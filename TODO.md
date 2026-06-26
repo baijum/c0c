@@ -6,7 +6,7 @@
 - [x] **conio**: print, println, printint, printbool, printchar, readline, eof
 - [x] **string**: all 11 functions + string_to_chararray, string_from_chararray
 - [x] **parse**: parse_bool, parse_int (base 8/10/16)
-- [x] **file**: file_read, file_close, file_eof, file_readline
+- [x] **file**: file_read, file_close, file_eof, file_readline (with file_t opaque type)
 - [x] **args**: args_flag, args_int, args_string, args_parse
 
 ### `#use` directives
@@ -15,8 +15,16 @@
 - [x] Only link libraries that are actually imported
 
 ## Runtime Safety
-- [x] NULL-checked pointer dereference (all paths through `c0_deref`)
-- [ ] Garbage collection (uses `calloc` with no GC)
+
+### NULL-checked pointer dereference
+- [x] Codegen: emit `*((T*)c0_deref(p))` for pointer reads
+- [x] Codegen: emit `*((T*)c0_deref(p)) = expr` for pointer writes
+- [x] Codegen: emit `((T*)c0_deref(p))->field` for struct field access
+
+### Garbage collection
+- [ ] Integrate Boehm GC (`GC_malloc` instead of `calloc`)
+- [ ] Alternatively, implement a simple mark-and-sweep in c0rt.c
+- Currently uses `calloc` with no collection — long-running programs leak
 
 ## Compiler Features
 
@@ -24,28 +32,59 @@
 - [x] `@requires`, `@ensures`, `@assert`, `@loop_invariant`
 - [x] `\result` in `@ensures` — saves return value, checks postcondition at return
 - [x] `\length(expr)` in contracts — emits `c0_array_length`
+- [ ] `\old(e)` in `@ensures` — save expression value at function entry
 
 ### Error handling
 - [x] Error messages include line and column numbers
 - [x] Source filename in error messages
 - [x] Error recovery — continues checking after per-declaration errors
+- [ ] Show the source line with a caret pointing to the error column
+- [ ] Distinguish errors from warnings
 
-### Not yet implemented
-- [ ] Multiple source file compilation (via CLI, not `#use`)
-- [ ] Struct equality error message improvement
-- [ ] Array element type annotation on AST
+### Multiple source files
+- [ ] Accept multiple `.c0` files on the command line
+- [ ] Compile each to C, link together with a single `zig cc` invocation
+- [ ] Check for duplicate function/struct/typedef definitions across files
+
+### Struct equality and copy
+- [ ] C0 does not allow `==` or `=` on struct values (only pointers)
+- [ ] The checker enforces this, but the error message could be more specific
+
+### Array element type in codegen
+- [ ] Currently infers array element type from `var-types` hash table
+- [ ] Fails for array expressions that aren't simple variables (e.g. `f()[i]`)
+- [ ] With the type checker, annotate the AST with resolved types instead
 
 ## Optimization
-- [ ] `-O1`/`-O2`, `-g`, `-S` flags
+
+### Compilation flags
+- [ ] Support `-O1`/`-O2` for optimized builds (needs careful handling of C UB)
+- [ ] Support `-g` for debug info in compiled binaries
+- [ ] Support `-S` to emit assembly
+
+### Compiled output size
+- [ ] Strip debug symbols by default for release builds
+- [ ] Consider `-Oz` for size-optimized binaries
 
 ## Testing
-- [x] 30 integration tests
-- [x] 53 type checker tests
-- [x] 35 lexer tests
-- [x] Runtime safety abort tests (NULL, bounds, div-by-zero, mod-by-zero, overflow)
-- [x] `--no-check` contract suppression test
-- [x] Expected-error test infrastructure
-- [x] Cross-compilation emit-c test
-- [x] `#use "filename"` file inclusion test
-- [x] GitHub Actions CI workflow
-- [ ] Cross-compilation binary execution (needs QEMU)
+
+### Test coverage
+- [x] Runtime safety: NULL deref, array OOB, div-by-zero, mod-by-zero, INT32_MIN/-1
+- [x] `--no-check` suppresses contract assertions
+- [x] Expected-error tests (compile should fail with specific error)
+- [x] `#use "filename"` file inclusion
+- [ ] Test error messages for all type checker rejections
+- [ ] Cross-compilation binary execution (needs QEMU or Docker)
+
+### Test infrastructure
+- [x] Runtime-abort tests (`run_abort_test`)
+- [x] Expected-error tests (`run_error_test`)
+- [x] Cross-compilation emit-c test (`run_cross_test`)
+- [x] `--no-check` test (`run_nocheck_test`)
+- [x] CI workflow (`.github/workflows/ci.yml`)
+
+### Test counts
+- 30 integration tests
+- 53 type checker tests
+- 35 lexer tests
+- 118 total
