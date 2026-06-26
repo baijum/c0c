@@ -27,9 +27,9 @@
 - [ ] `c0_string string_from_chararray(c0_array* a)` — convert char[] to string
 
 ### `#use` directives
-- [ ] Parse `#use <conio>`, `#use <string>`, `#use <file>`, `#use <args>`, `#use <parse>`
-- [ ] Only link libraries that are actually imported
-- Currently all conio and string functions are always available
+- [x] Parse `#use <conio>`, `#use <string>`, `#use <file>`, `#use <args>`, `#use <parse>`
+- [x] Only link libraries that are actually imported
+- Done: lexer tokenizes `#use <lib>`, parser produces `g-use` AST nodes (enforced before declarations), checker conditionally registers library functions
 
 ## Runtime Safety
 

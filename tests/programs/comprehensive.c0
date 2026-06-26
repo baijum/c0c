@@ -1,3 +1,5 @@
+#use <conio>
+#use <string>
 typedef int number;
 
 struct list {

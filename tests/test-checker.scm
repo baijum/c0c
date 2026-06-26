@@ -138,6 +138,29 @@
 (check-accepts "assign in both branches"
   "int main() { int x; if (true) { x = 1; } else { x = 2; } return x; }")
 
+(display "\n#use directives:\n")
+
+(check-accepts "#use conio allows printint"
+  "#use <conio>\nint main() { printint(42); return 0; }")
+
+(check-accepts "#use string allows string_length"
+  "#use <string>\nint main() { int n = string_length(\"hi\"); return 0; }")
+
+(check-accepts "#use conio and string"
+  "#use <conio>\n#use <string>\nint main() { printint(string_length(\"hi\")); return 0; }")
+
+(check-rejects "printint without #use conio"
+  "int main() { printint(42); return 0; }")
+
+(check-rejects "string_length without #use string"
+  "int main() { int n = string_length(\"hi\"); return 0; }")
+
+(check-rejects "#use conio does not give string funcs"
+  "#use <conio>\nint main() { int n = string_length(\"hi\"); return 0; }")
+
+(check-rejects "unknown library"
+  "#use <unknown>\nint main() { return 0; }")
+
 (display "\nReturn checking:\n")
 
 (check-rejects "missing return"

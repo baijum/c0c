@@ -1,3 +1,5 @@
+#use <conio>
+#use <string>
 int main() {
   string s = "hello";
   printint(string_length(s));

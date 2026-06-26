@@ -333,6 +333,39 @@
                 ((char=? ch #\.)
                  (make-tok 'op-dot #f line col))
 
+                ((char=? ch #\#)
+                 (let ((start-ln line) (start-col col))
+                   (let kw-loop ((chars '()))
+                     (let ((c (peek)))
+                       (if (and (not (eof-object? c)) (char-alphabetic? c))
+                           (begin (advance!) (kw-loop (cons c chars)))
+                           (let ((kw (list->string (reverse chars))))
+                             (unless (string=? kw "use")
+                               (error "c0c: unknown directive"
+                                      kw filename start-ln start-col))
+                             (let ws ()
+                               (when (and (not (eof-object? (peek)))
+                                          (char-whitespace? (peek))
+                                          (not (char=? (peek) #\newline)))
+                                 (advance!) (ws)))
+                             (let ((open (advance!)))
+                               (unless (and (not (eof-object? open))
+                                            (char=? open #\<))
+                                 (error "c0c: expected < after #use"
+                                        filename start-ln start-col))
+                               (let lib-loop ((chars '()))
+                                 (let ((c (advance!)))
+                                   (cond
+                                     ((or (eof-object? c) (char=? c #\newline))
+                                      (error "c0c: unterminated #use directive"
+                                             filename start-ln start-col))
+                                     ((char=? c #\>)
+                                      (make-tok 'use-lib
+                                                (list->string (reverse chars))
+                                                start-ln start-col))
+                                     (else
+                                      (lib-loop (cons c chars)))))))))))))
+
                 (else
                  (error "c0c: unexpected character"
                         ch filename line col))))))

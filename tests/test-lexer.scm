@@ -72,6 +72,15 @@
 (check "line comment" '(int-lit) (lex-tags "42 // ignore this"))
 (check "block comment" '(int-lit int-lit) (lex-tags "1 /* skip */ 2"))
 
+(display "Use directives:\n")
+(check "#use conio tag" '(use-lib) (lex-tags "#use <conio>"))
+(check "#use conio val" '("conio") (lex-vals "#use <conio>"))
+(check "#use string tag" '(use-lib) (lex-tags "#use <string>"))
+(check "#use string val" '("string") (lex-vals "#use <string>"))
+(check "#use before decl"
+  '(use-lib use-lib kw-int ident lparen rparen lbrace kw-return int-lit semi rbrace)
+  (lex-tags "#use <conio>\n#use <string>\nint main() { return 0; }"))
+
 (display "Full statement:\n")
 (check "return 0;"
   '(kw-return int-lit semi)

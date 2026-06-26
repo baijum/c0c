@@ -486,7 +486,18 @@
                          (reverse (cons param params))))))))
 
     (define (parse-program lex)
-      (let loop ((decls '()))
-        (if (eq? (tok-tag (lexer-peek lex)) 'eof)
-            (list 'program (reverse decls))
-            (loop (cons (parse-gdecl lex) decls)))))))
+      (let use-loop ((decls '()))
+        (if (eq? (tok-tag (lexer-peek lex)) 'use-lib)
+            (let ((t (lexer-next lex)))
+              (use-loop (cons (list 'g-use (tok-val t)
+                                    (tok-line t) (tok-col t))
+                              decls)))
+            (let decl-loop ((decls decls))
+              (let ((p (lexer-peek lex)))
+                (cond
+                  ((eq? (tok-tag p) 'eof)
+                   (list 'program (reverse decls)))
+                  ((eq? (tok-tag p) 'use-lib)
+                   (parse-error "#use must appear before all declarations" p))
+                  (else
+                   (decl-loop (cons (parse-gdecl lex) decls)))))))))))

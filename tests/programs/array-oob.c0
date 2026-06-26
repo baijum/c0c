@@ -1,3 +1,4 @@
+#use <conio>
 int main() {
   int[] a = alloc_array(int, 5);
   printint(a[10]);

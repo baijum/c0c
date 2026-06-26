@@ -302,6 +302,7 @@
 
     (define (emit-gdecl decl)
       (case (car decl)
+        ((g-use) #t)
         ((g-func)
          (let ((ret-type (cadr decl))
                (name (list-ref decl 2))

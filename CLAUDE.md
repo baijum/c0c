@@ -203,7 +203,6 @@ bounds-checked arrays, NULL-checked pointers (at runtime).
 
 ## What's Not Yet Implemented
 
-- `#use <lib>` directives (conio/string are always available)
 - `file` library (file_read, file_close, file_eof, file_readline)
 - `args` library (args_flag, args_int, args_string, args_parse)
 - `parse` library (parse_int, parse_bool)

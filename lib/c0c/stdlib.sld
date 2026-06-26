@@ -1,14 +1,21 @@
 (define-library (c0c stdlib)
   (import (scheme base) (srfi 69))
-  (export register-library-funcs! library-func? mangle)
+  (export register-library-funcs! register-libraries-for!
+          known-library? library-func? mangle)
   (begin
 
-    (define library-signatures
+    (define conio-signatures
       (list
         (cons "print" (cons '(ty-void) (list '(ty-string))))
         (cons "println" (cons '(ty-void) (list '(ty-string))))
         (cons "printint" (cons '(ty-void) (list '(ty-int))))
+        (cons "printbool" (cons '(ty-void) (list '(ty-bool))))
+        (cons "printchar" (cons '(ty-void) (list '(ty-char))))
         (cons "readline" (cons '(ty-string) '()))
+        (cons "eof" (cons '(ty-bool) '()))))
+
+    (define string-signatures
+      (list
         (cons "string_length" (cons '(ty-int) (list '(ty-string))))
         (cons "string_charat" (cons '(ty-char)
                                     (list '(ty-string) '(ty-int))))
@@ -26,10 +33,17 @@
         (cons "char_ord" (cons '(ty-int) (list '(ty-char))))
         (cons "char_chr" (cons '(ty-char) (list '(ty-int))))))
 
+    (define all-libraries
+      (list (cons "conio" conio-signatures)
+            (cons "string" string-signatures)))
+
+    (define all-signatures
+      (append conio-signatures string-signatures))
+
     (define library-names
       (let ((ht (make-hash-table string=? string-hash)))
         (for-each (lambda (entry) (hash-table-set! ht (car entry) #t))
-          library-signatures)
+          all-signatures)
         (for-each (lambda (name) (hash-table-set! ht name #t))
           '("string_from_chararray" "string_to_chararray"
             "c0_array_length"))
@@ -39,7 +53,21 @@
       (for-each
         (lambda (entry)
           (hash-table-set! funcs (car entry) (cdr entry)))
-        library-signatures))
+        all-signatures))
+
+    (define (register-libraries-for! funcs used-libs)
+      (for-each
+        (lambda (lib-name)
+          (let ((entry (assoc lib-name all-libraries)))
+            (when entry
+              (for-each
+                (lambda (sig)
+                  (hash-table-set! funcs (car sig) (cdr sig)))
+                (cdr entry)))))
+        used-libs))
+
+    (define (known-library? name)
+      (assoc name all-libraries))
 
     (define (library-func? name)
       (hash-table-exists? library-names name))

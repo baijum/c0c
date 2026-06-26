@@ -1,3 +1,4 @@
+#use <conio>
 typedef int number;
 typedef int* intptr;
 

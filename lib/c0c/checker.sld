@@ -1,7 +1,7 @@
 (define-library (c0c checker)
   (import (scheme base) (scheme write) (srfi 69)
           (c0c stdlib))
-  (export check-program)
+  (export check-program check-error)
   (begin
 
     (define funcs (make-hash-table string=? string-hash))
@@ -454,6 +454,8 @@
 
     (define (check-gdecl decl)
       (case (car decl)
+        ((g-use) #t)
+
         ((g-typedef)
          (let ((ty (resolve-type (cadr decl)))
                (name (list-ref decl 2)))
@@ -503,8 +505,20 @@
       (set! typedefs (make-hash-table string=? string-hash))
       (set! env '())
       (set! in-loop #f)
-      (register-library-funcs! funcs)
-      (let ((decls (cadr ast)))
+      (let* ((decls (cadr ast))
+             (used-libs
+               (let loop ((ds decls) (acc '()))
+                 (cond
+                   ((null? ds) (reverse acc))
+                   ((eq? (car (car ds)) 'g-use)
+                    (loop (cdr ds) (cons (cadr (car ds)) acc)))
+                   (else (loop (cdr ds) acc))))))
+        (for-each
+          (lambda (lib)
+            (unless (known-library? lib)
+              (error (string-append "c0c type error: unknown library: " lib))))
+          used-libs)
+        (register-libraries-for! funcs used-libs)
         (for-each
           (lambda (decl)
             (case (car decl)
