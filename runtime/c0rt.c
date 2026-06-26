@@ -325,5 +325,8 @@ struct parsed_int* parse_int(c0_string s, int32_t base) {
 int main(int argc, char** argv) {
     c0_argc = argc;
     c0_argv = argv;
+#ifdef C0_USE_GC
+    GC_INIT();
+#endif
     return _c0_main();
 }

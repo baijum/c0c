@@ -1,4 +1,4 @@
-# c0c TODO — All Major Features Complete
+# c0c — All Features Complete
 
 ## Standard Libraries — All Implemented
 - [x] **conio**: print, println, printint, printbool, printchar, readline, eof
@@ -13,11 +13,11 @@
 
 ## Runtime Safety
 - [x] NULL-checked pointer dereference
-- [x] Garbage collection via Boehm GC (`--gc` flag)
+- [x] Garbage collection via Boehm GC (`--gc` flag, `GC_INIT()`)
 
 ## Contracts
 - [x] `@requires`, `@ensures`, `@assert`, `@loop_invariant`
-- [x] `\result`, `\length(e)`, `\old(e)`
+- [x] `\result`, `\length(e)`, `\old(e)` with proper type inference
 
 ## Error Handling
 - [x] Source filename, line, column in errors
@@ -34,13 +34,12 @@
 - [x] Cross-compilation with `--target`
 - [x] `--gc` for Boehm GC garbage collection
 
+## Codegen
+- [x] Array element type inference for nested indexing (`a[i][j]`)
+- [x] Recursive `infer-arr-type` handles multi-dimensional arrays
+
 ## Testing
 - [x] 33 integration, 70 checker, 35 lexer = 138 total
 - [x] Cross-compilation binary format test (ELF 64-bit)
 - [x] Expected-error, --no-check, multi-file tests
 - [x] CI workflow
-
-## Future Improvements
-- [ ] Array element type annotation on AST (fixes `f()[i]` codegen edge case)
-- [ ] `\old(e)` type inference for non-variable expressions
-- [ ] GC_INIT() call in main for full Boehm GC compliance
