@@ -1,0 +1,13 @@
+#use <conio>
+
+int div(int a, int b)
+//@requires b > 0;
+{
+  return a / b;
+}
+
+int main() {
+  printint(div(10, 0));
+  println("");
+  return 0;
+}

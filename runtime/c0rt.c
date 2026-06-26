@@ -174,6 +174,59 @@ char char_chr(int32_t n) {
     return (char)n;
 }
 
+struct c0_file { FILE* fp; };
+
+file_t file_read(c0_string path) {
+    if (!path) c0_abort("NULL string in file_read");
+    FILE* fp = fopen(path, "r");
+    if (!fp) c0_abort("file_read: cannot open file");
+    file_t f = malloc(sizeof(struct c0_file));
+    if (!f) c0_abort("out of memory");
+    f->fp = fp;
+    return f;
+}
+
+void file_close(file_t f) {
+    if (!f) c0_abort("NULL file in file_close");
+    fclose(f->fp);
+    f->fp = NULL;
+}
+
+bool file_eof(file_t f) {
+    if (!f) c0_abort("NULL file in file_eof");
+    return feof(f->fp) != 0;
+}
+
+c0_string file_readline(file_t f) {
+    if (!f) c0_abort("NULL file in file_readline");
+    char buf[1024];
+    if (!fgets(buf, sizeof(buf), f->fp)) return "";
+    size_t len = strlen(buf);
+    if (len > 0 && buf[len - 1] == '\n') buf[--len] = '\0';
+    if (len > 0 && buf[len - 1] == '\r') buf[--len] = '\0';
+    char* s = malloc(len + 1);
+    if (!s) c0_abort("out of memory");
+    memcpy(s, buf, len + 1);
+    return s;
+}
+
+c0_array* string_to_chararray(c0_string s) {
+    if (!s) c0_abort("NULL string in string_to_chararray");
+    int32_t len = (int32_t)strlen(s);
+    c0_array* arr = c0_alloc_array(sizeof(char), len);
+    memcpy(arr->data, s, (size_t)len);
+    return arr;
+}
+
+c0_string string_from_chararray(c0_array* a) {
+    if (!a) c0_abort("NULL array in string_from_chararray");
+    char* s = malloc((size_t)a->count + 1);
+    if (!s) c0_abort("out of memory");
+    memcpy(s, a->data, (size_t)a->count);
+    s[a->count] = '\0';
+    return s;
+}
+
 struct parsed_bool* parse_bool(c0_string s) {
     if (!s) c0_abort("NULL string in parse_bool");
     if (strcmp(s, "true") != 0 && strcmp(s, "false") != 0) return NULL;

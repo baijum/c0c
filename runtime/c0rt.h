@@ -50,6 +50,14 @@ c0_string string_frombool(bool b);
 c0_string string_fromchar(char c);
 int32_t char_ord(char c);
 char char_chr(int32_t n);
+c0_array* string_to_chararray(c0_string s);
+c0_string string_from_chararray(c0_array* a);
+
+typedef struct c0_file* file_t;
+file_t file_read(c0_string path);
+void file_close(file_t f);
+bool file_eof(file_t f);
+c0_string file_readline(file_t f);
 
 struct parsed_bool { bool result; };
 struct parsed_int { int32_t result; };

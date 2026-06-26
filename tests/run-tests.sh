@@ -183,6 +183,37 @@ run_abort_test "division by zero" "$C0C_DIR/tests/programs/div-by-zero.c0" \
 run_abort_test "INT32_MIN / -1 overflow" "$C0C_DIR/tests/programs/int-overflow-div.c0" \
     "integer overflow in division"
 
+run_abort_test "modulo by zero" "$C0C_DIR/tests/programs/mod-by-zero.c0" \
+    "modulo by zero"
+
+run_nocheck_test() {
+    local name="$1"
+    local c0_file="$2"
+    local expected_msg="$3"
+
+    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
+        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" --no-check 2>/dev/null; then
+        local stderr_out
+        stderr_out=$(/tmp/c0c-test-$$ 2>&1 >/dev/null; true)
+        if echo "$stderr_out" | grep -q "$expected_msg"; then
+            echo "  PASS: $name"
+            PASS=$((PASS + 1))
+        else
+            echo "  FAIL: $name"
+            echo "    expected stderr containing: $expected_msg"
+            echo "    actual stderr: $stderr_out"
+            FAIL=$((FAIL + 1))
+        fi
+    else
+        echo "  FAIL: $name (compilation failed)"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "/tmp/c0c-test-$$" "/tmp/c0c-test-$$.c"
+}
+
+run_nocheck_test "--no-check skips requires" "$C0C_DIR/tests/programs/no-check.c0" \
+    "division by zero"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

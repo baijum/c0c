@@ -3,12 +3,9 @@
 ## Standard Libraries
 
 ### file library
-- [ ] `file_t file_read(string path)` — open file for reading
-- [ ] `void file_close(file_t f)` — close file handle
-- [ ] `bool file_eof(file_t f)` — check end-of-file
-- [ ] `string file_readline(file_t f)` — read line from file
-- Requires adding `file_t` as an opaque type (pointer to runtime struct)
-- Runtime: implement in c0rt.c using `fopen`/`fclose`/`fgets`
+- [x] Runtime: `file_read`, `file_close`, `file_eof`, `file_readline` implemented in c0rt.c
+- [ ] Compiler: register `file_t` opaque type and function signatures
+- Blocked: kaappi VM bytecode size limit prevents adding more code to checker.sld
 
 ### args library
 - [ ] `void args_flag(string name, bool *ptr)` — register boolean flag
@@ -23,12 +20,17 @@
 - Done: `parsed_bool`/`parsed_int` structs + functions in c0rt.h/c0rt.c, signatures in stdlib.sld, checker registers structs for `#use <parse>`
 
 ### string library (missing functions)
-- [ ] `c0_array* string_to_chararray(c0_string s)` — convert string to char[]
-- [ ] `c0_string string_from_chararray(c0_array* a)` — convert char[] to string
+- [x] Runtime: `string_to_chararray` and `string_from_chararray` implemented in c0rt.c
+- [ ] Compiler: register signatures in checker for `#use <string>`
+- Blocked: kaappi VM bytecode size limit prevents adding more code to checker.sld
+
+### conio library (missing runtime)
+- [x] `printbool`, `printchar`, `eof` implemented in c0rt.c/c0rt.h
 
 ### `#use` directives
 - [x] Parse `#use <conio>`, `#use <string>`, `#use <file>`, `#use <args>`, `#use <parse>`
 - [x] Only link libraries that are actually imported
+- [ ] `#use "filename"` — file inclusion (not yet implemented)
 - Done: lexer tokenizes `#use <lib>`, parser produces `g-use` AST nodes (enforced before declarations), checker conditionally registers library functions
 
 ## Runtime Safety
@@ -46,6 +48,16 @@
 
 ## Compiler Features
 
+### `\result` in `@ensures`
+- [ ] Parse `\result` as a special variable in `@ensures` annotations
+- [ ] Bind it to the function's return value in generated C
+- Blocked: kaappi VM bytecode size limit prevents adding lexer/parser/checker/codegen code
+
+### `\length(e)` in contracts
+- [ ] Parse `\length(expr)` in contract annotations
+- [ ] Emit `c0_array_length(expr)` in generated C
+- Blocked: kaappi VM bytecode size limit
+
 ### Error recovery
 - [ ] Continue parsing after first error to report multiple errors
 - [ ] Synchronize at statement boundaries (skip to next `;` or `}`)
@@ -60,11 +72,6 @@
 - [ ] Accept multiple `.c0` files on the command line
 - [ ] Compile each to C, link together with a single `zig cc` invocation
 - [ ] Check for duplicate function/struct/typedef definitions across files
-
-### `\result` in `@ensures`
-- [ ] Parse `\result` as a special variable in `@ensures` annotations
-- [ ] Bind it to the function's return value in generated C
-- Requires codegen to emit a temporary for the return value
 
 ### Struct equality and copy
 - [ ] C0 does not allow `==` or `=` on struct values (only pointers)
@@ -93,7 +100,8 @@
 - [x] Test runtime safety: array out-of-bounds abort message
 - [x] Test runtime safety: division by zero abort message
 - [x] Test runtime safety: INT32_MIN / -1 abort message
-- [ ] Test `--no-check` suppresses contract assertions
+- [x] Test runtime safety: modulo by zero abort message
+- [x] Test `--no-check` suppresses contract assertions
 - [ ] Test cross-compilation produces working binaries (needs QEMU or Docker)
 - [ ] Test error messages for all type checker rejections
 
@@ -101,3 +109,11 @@
 - [ ] Add expected-error tests (compile should fail with specific message)
 - [x] Add runtime-abort tests (compiled binary should abort with specific message)
 - [ ] CI workflow (GitHub Actions)
+
+## Kaappi VM Limitations
+
+Several features are implemented in the runtime (c0rt.c/c0rt.h) but cannot be
+registered in the compiler (checker.sld/stdlib.sld) because the kaappi VM has a
+hard limit on combined bytecode size across all `.sld` library files (~1937 lines
+total). Adding more code to any `.sld` file causes the VM to fail to bind library
+exports. Features blocked by this limit are marked above.

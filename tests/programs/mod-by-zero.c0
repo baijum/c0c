@@ -1,0 +1,7 @@
+#use <conio>
+
+int main() {
+  int x = 10 % 0;
+  printint(x);
+  return 0;
+}
