@@ -230,6 +230,17 @@
                (let loop ((n 0) (acc '()))
                  (if (= n (length arg-types)) (reverse acc)
                      (loop (+ n 1) (cons n acc)))))
+             (when (and (pair? args) (eq? (car (car args)) 'e-int))
+               (let ((v (cadr (car args))))
+                 (when (and (string=? name "alloc_array") (< v 0))
+                   (check-warn "negative array size" expr))))
+             (when (and (>= (length args) 2) (eq? (car (cadr args)) 'e-int))
+               (let ((v (cadr (cadr args))))
+                 (cond
+                   ((and (member name '("string_charat" "string_sub")) (< v 0))
+                    (check-warn "negative index" expr))
+                   ((and (= v 0) (member name '("c0_idiv" "c0_imod")))
+                    (check-warn "division by zero" expr)))))
              ret-type)))
 
         ((e-index)
