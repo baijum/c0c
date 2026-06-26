@@ -247,6 +247,7 @@
 
         ((e-result) current-ret-type)
         ((e-length) (check-expr (cadr expr)) '(ty-int))
+        ((e-old) (check-expr (cadr expr)))
         (else (check-error "unknown expression form" expr))))
 
     (define (is-lvalue? expr)

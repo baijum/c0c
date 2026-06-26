@@ -190,6 +190,9 @@
 (check-accepts "\\length in @requires"
   "int sum(int[] a, int n)\n//@requires n == \\length(a);\n{ return 0; }")
 
+(check-accepts "\\old in @ensures"
+  "int inc(int x)\n//@ensures \\result == \\old(x) + 1;\n{ return x + 1; }")
+
 (display "\nReturn checking:\n")
 
 (check-rejects "missing return"

@@ -1,0 +1,26 @@
+#use <conio>
+
+int increment(int x)
+//@ensures \result == \old(x) + 1;
+{
+  return x + 1;
+}
+
+void add_to(int* p, int n)
+//@ensures *p == \old(*p) + n;
+{
+  *p = *p + n;
+}
+
+int main() {
+  printint(increment(41));
+  println("");
+
+  int* p = alloc(int);
+  *p = 10;
+  add_to(p, 5);
+  printint(*p);
+  println("");
+
+  return 0;
+}

@@ -32,7 +32,7 @@
 - [x] `@requires`, `@ensures`, `@assert`, `@loop_invariant`
 - [x] `\result` in `@ensures` — saves return value, checks postcondition at return
 - [x] `\length(expr)` in contracts — emits `c0_array_length`
-- [ ] `\old(e)` in `@ensures` — save expression value at function entry
+- [x] `\old(e)` in `@ensures` — captures value at function entry, uses saved variable in postcondition check
 
 ### Error handling
 - [x] Error messages include line and column numbers
@@ -84,7 +84,7 @@
 - [x] CI workflow (`.github/workflows/ci.yml`)
 
 ### Test counts
-- 30 integration tests
-- 53 type checker tests
+- 31 integration tests
+- 54 type checker tests
 - 35 lexer tests
-- 118 total
+- 120 total

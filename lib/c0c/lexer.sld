@@ -374,6 +374,7 @@
                          (let ((w (list->string (reverse cs))))
                            (cond ((string=? w "result") (make-tok 'bs-result #f line col))
                                  ((string=? w "length") (make-tok 'bs-length #f line col))
+                                 ((string=? w "old") (make-tok 'bs-old #f line col))
                                  (else (error "c0c: unknown \\keyword" w))))))))
                 (else
                  (error "c0c: unexpected character"

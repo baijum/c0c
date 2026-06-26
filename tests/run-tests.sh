@@ -148,6 +148,10 @@ run_test "ensures and \\result" "$C0C_DIR/tests/programs/ensures.c0" \
 7
 60"
 
+run_test "old in ensures" "$C0C_DIR/tests/programs/old-ensures.c0" \
+"42
+15"
+
 run_test "use file include" "$C0C_DIR/tests/programs/use-file.c0" \
 "42
 42"
