@@ -1,6 +1,6 @@
 #!/bin/sh
 # c0c — C0 to native compiler
-# Usage: c0c <file.c0> [-o output] [--target T] [--emit-c] [--no-check]
+# Usage: c0c <file.c0> [-o output] [--target T] [--emit-c] [--no-check] [-O0|-O1|-O2] [-g] [-S]
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 KAAPPI="${KAAPPI:-kaappi}"

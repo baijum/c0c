@@ -58,9 +58,9 @@
 ## Optimization
 
 ### Compilation flags
-- [ ] Support `-O1`/`-O2` for optimized builds (needs careful handling of C UB)
-- [ ] Support `-g` for debug info in compiled binaries
-- [ ] Support `-S` to emit assembly
+- [x] `-O0`/`-O1`/`-O2` optimization levels (passed to `zig cc`, keeps `-fwrapv`)
+- [x] `-g` debug symbols
+- [x] `-S` emit assembly (`.s`) instead of binary
 
 ### Compiled output size
 - [ ] Strip debug symbols by default for release builds

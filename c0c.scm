@@ -34,6 +34,10 @@
   (display "  --emit-c         Stop after C emission\n")
   (display "  --target <T>     Cross-compile target (e.g. x86_64-linux)\n")
   (display "  --runtime <dir>  Path to c0c runtime directory\n")
+  (display "  --no-check       Disable contract assertions\n")
+  (display "  -O0, -O1, -O2    Optimization level (default: -O0)\n")
+  (display "  -g               Include debug symbols\n")
+  (display "  -S               Emit assembly instead of binary\n")
   (newline)
   (exit 1))
 
@@ -44,6 +48,10 @@
         ((< i 0) ".")
         ((char=? (string-ref path i) #\/) (substring path 0 i))
         (else (loop (- i 1)))))))
+
+(define opt-level "0")
+(define debug-mode #f)
+(define emit-asm #f)
 
 (define (parse-args args)
   (let loop ((args args) (source #f) (output "a.out")
@@ -65,6 +73,16 @@
        (loop (cddr args) source output emit-c target (cadr args) no-check))
       ((string=? (car args) "--no-check")
        (loop (cdr args) source output emit-c target runtime-dir #t))
+      ((string=? (car args) "-O0") (set! opt-level "0")
+       (loop (cdr args) source output emit-c target runtime-dir no-check))
+      ((string=? (car args) "-O1") (set! opt-level "1")
+       (loop (cdr args) source output emit-c target runtime-dir no-check))
+      ((string=? (car args) "-O2") (set! opt-level "2")
+       (loop (cdr args) source output emit-c target runtime-dir no-check))
+      ((string=? (car args) "-g") (set! debug-mode #t)
+       (loop (cdr args) source output emit-c target runtime-dir no-check))
+      ((string=? (car args) "-S") (set! emit-asm #t)
+       (loop (cdr args) source output emit-c target runtime-dir no-check))
       ((or (string=? (car args) "-h") (string=? (car args) "--help"))
        (usage))
       (else
@@ -87,13 +105,21 @@
             (let* ((script-dir (path-directory source))
                    (rt-dir (or runtime-dir
                                (string-append script-dir "/runtime")))
+                   (out-file (if emit-asm
+                                 (string-append output ".s")
+                                 output))
                    (cmd (string-append
-                          "zig cc -O0 -fwrapv -std=c11 "
+                          "zig cc -O" opt-level " -fwrapv -std=c11 "
+                          (if debug-mode "-g " "")
+                          (if emit-asm "-S " "")
                           "-I" rt-dir " "
                           (if target
                               (string-append "-target " target " ")
                               "")
-                          c-file " " rt-dir "/c0rt.c "
-                          "-o " output)))
+                          c-file " "
+                          (if emit-asm "" (string-append rt-dir "/c0rt.c "))
+                          "-o " out-file)))
               (run-command cmd)
-              (delete-file c-file)))))))
+              (delete-file c-file)
+              (when emit-asm
+                (display "Wrote ") (display out-file) (newline))))))))
