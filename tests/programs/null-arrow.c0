@@ -1,0 +1,10 @@
+struct point {
+  int x;
+  int y;
+};
+
+int main() {
+  struct point* p = NULL;
+  printint(p->x);
+  return 0;
+}

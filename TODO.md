@@ -34,10 +34,10 @@
 ## Runtime Safety
 
 ### NULL-checked pointer dereference
-- [ ] Codegen: emit `*((T*)c0_deref(p))` instead of `(*(p))` for pointer reads
-- [ ] Codegen: emit `*((T*)c0_deref(p)) = expr` for pointer writes
-- [ ] Codegen: emit `((T*)c0_deref(p))->field` for struct field access
-- Currently raw dereference segfaults on NULL instead of printing a clean error
+- [x] Codegen: emit `*((T*)c0_deref(p))` instead of `(*(p))` for pointer reads
+- [x] Codegen: emit `*((T*)c0_deref(p)) = expr` for pointer writes
+- [x] Codegen: emit `((T*)c0_deref(p))->field` for struct field access
+- Done: all pointer dereferences and arrow accesses now route through `c0_deref`
 
 ### Garbage collection
 - [ ] Integrate Boehm GC (`GC_malloc` instead of `calloc`)
@@ -89,7 +89,7 @@
 ## Testing
 
 ### Test coverage
-- [ ] Test runtime safety: NULL dereference abort message
+- [x] Test runtime safety: NULL dereference abort message
 - [ ] Test runtime safety: array out-of-bounds abort message
 - [ ] Test runtime safety: division by zero abort message
 - [ ] Test runtime safety: INT32_MIN / -1 abort message
@@ -99,5 +99,5 @@
 
 ### Test infrastructure
 - [ ] Add expected-error tests (compile should fail with specific message)
-- [ ] Add runtime-abort tests (compiled binary should abort with specific message)
+- [x] Add runtime-abort tests (compiled binary should abort with specific message)
 - [ ] CI workflow (GitHub Actions)

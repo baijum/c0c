@@ -1,0 +1,66 @@
+int[][] mat_new(int rows, int cols)
+//@requires rows > 0 && cols > 0;
+{
+  int[][] m = alloc_array(int[], rows);
+  for (int i = 0; i < rows; i++) {
+    m[i] = alloc_array(int, cols);
+  }
+  return m;
+}
+
+int[][] mat_multiply(int[][] a, int[][] b, int m, int n, int p)
+//@requires m > 0 && n > 0 && p > 0;
+{
+  int[][] c = mat_new(m, p);
+  for (int i = 0; i < m; i++) {
+    for (int j = 0; j < p; j++) {
+      int sum = 0;
+      for (int k = 0; k < n; k++) {
+        sum += a[i][k] * b[k][j];
+      }
+      c[i][j] = sum;
+    }
+  }
+  return c;
+}
+
+int mat_trace(int[][] m, int n)
+//@requires n > 0;
+{
+  int sum = 0;
+  for (int i = 0; i < n; i++) {
+    sum += m[i][i];
+  }
+  return sum;
+}
+
+void mat_print(int[][] m, int rows, int cols) {
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      printint(m[i][j]);
+      if (j < cols - 1) print(" ");
+    }
+    println("");
+  }
+}
+
+int main() {
+  int[][] a = mat_new(2, 3);
+  a[0][0] = 1; a[0][1] = 2; a[0][2] = 3;
+  a[1][0] = 4; a[1][1] = 5; a[1][2] = 6;
+
+  int[][] b = mat_new(3, 2);
+  b[0][0] = 7;  b[0][1] = 8;
+  b[1][0] = 9;  b[1][1] = 10;
+  b[2][0] = 11; b[2][1] = 12;
+
+  int[][] c = mat_multiply(a, b, 2, 3, 2);
+  mat_print(c, 2, 2);
+
+  int[][] eye = mat_new(3, 3);
+  eye[0][0] = 1; eye[1][1] = 1; eye[2][2] = 1;
+  printint(mat_trace(eye, 3));
+  println("");
+
+  return 0;
+}

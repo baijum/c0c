@@ -129,7 +129,7 @@ Unary operators: `neg`, `lognot`, `bitnot`, `deref`.
 - Division/modulo → `c0_idiv(a, b)` / `c0_imod(a, b)` (checks div-by-zero + INT32_MIN/-1)
 - Shifts → `c0_ishl(a, b)` / `c0_ishr(a, b)` (masks shift amount to 5 bits)
 - Array access `a[i]` → `(*(elem_type*)c0_array_sub(a, i))` (bounds-checked)
-- Pointer deref `*p` → `(*(p))` (no NULL check in codegen; runtime crash on NULL)
+- Pointer deref `*p` → `*((T*)c0_deref(p))` (NULL-checked, aborts with clean error)
 - `alloc(T)` → `(T*)c0_alloc(sizeof(T))`
 - `alloc_array(T, n)` → `c0_alloc_array(sizeof(T), n)`
 - Contract annotations → `c0_assert(expr, "s-assert failed at line N")`

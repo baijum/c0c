@@ -1,0 +1,63 @@
+int hash(int key, int cap) {
+  int h = key;
+  if (h < 0) h = -h;
+  return h % cap;
+}
+
+int find_slot(int[] keys, bool[] used, int cap, int key) {
+  int idx = hash(key, cap);
+  for (int i = 0; i < cap; i++) {
+    int probe = (idx + i) % cap;
+    if (!used[probe] || keys[probe] == key) {
+      return probe;
+    }
+  }
+  return -1;
+}
+
+void put(int[] keys, int[] vals, bool[] used, int cap, int key, int value) {
+  int slot = find_slot(keys, used, cap, key);
+  //@assert slot >= 0;
+  keys[slot] = key;
+  vals[slot] = value;
+  used[slot] = true;
+}
+
+int get(int[] keys, int[] vals, bool[] used, int cap, int key) {
+  int idx = hash(key, cap);
+  for (int i = 0; i < cap; i++) {
+    int probe = (idx + i) % cap;
+    if (!used[probe]) return -1;
+    if (keys[probe] == key) return vals[probe];
+  }
+  return -1;
+}
+
+int main() {
+  int cap = 16;
+  int[] keys = alloc_array(int, cap);
+  int[] vals = alloc_array(int, cap);
+  bool[] used = alloc_array(bool, cap);
+  for (int i = 0; i < cap; i++) {
+    used[i] = false;
+  }
+
+  put(keys, vals, used, cap, 10, 100);
+  put(keys, vals, used, cap, 25, 250);
+  put(keys, vals, used, cap, 42, 420);
+
+  printint(get(keys, vals, used, cap, 10));
+  println("");
+
+  printint(get(keys, vals, used, cap, 42));
+  println("");
+
+  printint(get(keys, vals, used, cap, 99));
+  println("");
+
+  put(keys, vals, used, cap, 10, 999);
+  printint(get(keys, vals, used, cap, 10));
+  println("");
+
+  return 0;
+}

@@ -118,7 +118,15 @@
              ((neg) (emit "(-(") (emit-expr operand) (emit "))"))
              ((lognot) (emit "(!(") (emit-expr operand) (emit "))"))
              ((bitnot) (emit "(~(") (emit-expr operand) (emit "))"))
-             ((deref) (emit "(*(") (emit-expr operand) (emit "))"))
+             ((deref)
+             (let ((pty (infer-ptr-c-type operand)))
+               (if pty
+                   (begin
+                     (emit "(*((") (emit pty) (emit ")c0_deref(")
+                     (emit-expr operand) (emit ")))"))
+                   (begin
+                     (emit "(c0_deref(") (emit-expr operand) (emit "), *(")
+                     (emit-expr operand) (emit "))")))))
              (else (error "c0c codegen: unknown unop" op)))))
         ((e-ternary)
          (emit "((")
@@ -148,7 +156,14 @@
         ((e-field)
          (let ((obj (cadr expr))
                (field (list-ref expr 2)))
-           (emit "(") (emit-expr obj) (emit ")->" field)))
+           (let ((pty (infer-ptr-c-type obj)))
+             (if pty
+                 (begin
+                   (emit "((") (emit pty) (emit ")c0_deref(")
+                   (emit-expr obj) (emit "))->" field))
+                 (begin
+                   (emit "(c0_deref(") (emit-expr obj) (emit "), (")
+                   (emit-expr obj) (emit ")->" field ")"))))))
         ((e-alloc)
          (let ((ty (cadr expr)))
            (emit "(") (emit-type ty) (emit "*)c0_alloc(sizeof(")
@@ -159,6 +174,12 @@
            (emit "c0_alloc_array(sizeof(") (emit-type ty) (emit "), ")
            (emit-expr count) (emit ")")))
         (else (error "c0c codegen: unknown expr" (car expr)))))
+
+    (define (infer-ptr-c-type expr)
+      (if (and (eq? (car expr) 'e-var)
+               (hash-table-exists? var-types (cadr expr)))
+          (type->c-str (hash-table-ref var-types (cadr expr)))
+          #f))
 
     (define (infer-array-element-type expr)
       (if (and (eq? (car expr) 'e-var)

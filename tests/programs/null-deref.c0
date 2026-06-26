@@ -1,0 +1,5 @@
+int main() {
+  int* p = NULL;
+  printint(*p);
+  return 0;
+}

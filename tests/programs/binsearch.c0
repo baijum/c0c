@@ -1,0 +1,57 @@
+void insertion_sort(int[] a, int n)
+//@requires n >= 0;
+{
+  for (int i = 1; i < n; i++) {
+    int key = a[i];
+    int j = i - 1;
+    while (j >= 0 && a[j] > key) {
+      a[j + 1] = a[j];
+      j--;
+    }
+    a[j + 1] = key;
+  }
+}
+
+int binary_search(int[] a, int n, int target)
+//@requires n >= 0;
+{
+  int lo = 0;
+  int hi = n - 1;
+  while (lo <= hi) {
+    int mid = lo + (hi - lo) / 2;
+    if (a[mid] == target) {
+      return mid;
+    } else if (a[mid] < target) {
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return -1;
+}
+
+int main() {
+  int n = 8;
+  int[] a = alloc_array(int, n);
+  a[0] = 42; a[1] = 17; a[2] = 93; a[3] = 5;
+  a[4] = 28; a[5] = 61; a[6] = 3;  a[7] = 77;
+
+  insertion_sort(a, n);
+
+  for (int i = 0; i < n; i++) {
+    printint(a[i]);
+    if (i < n - 1) print(" ");
+  }
+  println("");
+
+  printint(binary_search(a, n, 42));
+  println("");
+
+  printint(binary_search(a, n, 100));
+  println("");
+
+  printint(binary_search(a, n, 3));
+  println("");
+
+  return 0;
+}

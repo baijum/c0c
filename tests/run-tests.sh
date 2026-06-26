@@ -99,6 +99,28 @@ run_test "contracts" "$C0C_DIR/tests/programs/contracts.c0" \
 3
 60"
 
+run_test "fibonacci" "$C0C_DIR/tests/programs/fibonacci.c0" \
+"0 1 1 2 3 5 8 13 21 34
+6765
+55"
+
+run_test "binary search" "$C0C_DIR/tests/programs/binsearch.c0" \
+"3 5 17 28 42 61 77 93
+4
+-1
+0"
+
+run_test "hash table" "$C0C_DIR/tests/programs/hashtable.c0" \
+"100
+420
+-1
+999"
+
+run_test "matrix multiply" "$C0C_DIR/tests/programs/matrix.c0" \
+"58 64
+139 154
+3"
+
 run_test "comprehensive" "$C0C_DIR/tests/programs/comprehensive.c0" \
 "3
 60
@@ -110,6 +132,38 @@ Hello C0!
 254
 1024
 3"
+
+run_abort_test() {
+    local name="$1"
+    local c0_file="$2"
+    local expected_msg="$3"
+
+    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
+        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" 2>/dev/null; then
+        local stderr_out
+        stderr_out=$(/tmp/c0c-test-$$ 2>&1 >/dev/null; true)
+        local exit_code=${PIPESTATUS[0]:-$?}
+        if echo "$stderr_out" | grep -q "$expected_msg"; then
+            echo "  PASS: $name"
+            PASS=$((PASS + 1))
+        else
+            echo "  FAIL: $name"
+            echo "    expected stderr containing: $expected_msg"
+            echo "    actual stderr: $stderr_out"
+            FAIL=$((FAIL + 1))
+        fi
+    else
+        echo "  FAIL: $name (compilation failed)"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "/tmp/c0c-test-$$" "/tmp/c0c-test-$$.c"
+}
+
+run_abort_test "null pointer deref" "$C0C_DIR/tests/programs/null-deref.c0" \
+    "NULL pointer dereference"
+
+run_abort_test "null arrow access" "$C0C_DIR/tests/programs/null-arrow.c0" \
+    "NULL pointer dereference"
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
