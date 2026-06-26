@@ -1,29 +1,10 @@
 (define-library (c0c codegen)
-  (import (scheme base) (scheme char) (scheme write) (srfi 69))
+  (import (scheme base) (scheme char) (scheme write) (srfi 69)
+          (c0c stdlib) (c0c codegen-util))
   (export emit-c-program)
   (begin
 
     (define emit-contracts #t)
-
-    (define library-funcs
-      (let ((ht (make-hash-table string=? string-hash)))
-        (for-each (lambda (name) (hash-table-set! ht name #t))
-          '("print" "println" "printint" "readline"
-            "string_length" "string_charat" "string_sub"
-            "string_join" "string_compare" "string_equal"
-            "string_fromint" "string_frombool" "string_fromchar"
-            "string_from_chararray" "string_to_chararray"
-            "char_ord" "char_chr"
-            "c0_array_length"))
-        ht))
-
-    (define (library-func? name)
-      (hash-table-exists? library-funcs name))
-
-    (define (mangle name)
-      (if (library-func? name)
-          name
-          (string-append "_c0_" name)))
 
     (define chunks '())
     (define var-types (make-hash-table string=? string-hash))
@@ -190,22 +171,6 @@
                 "int32_t"))
           "int32_t"))
 
-    (define (binop->c-str op)
-      (case op
-        ((plus) "+") ((minus) "-") ((star) "*")
-        ((amp) "&") ((pipe) "|") ((caret) "^")
-        ((amp-amp) "&&") ((pipe-pipe) "||")
-        ((lt) "<") ((le) "<=") ((gt) ">") ((ge) ">=")
-        ((eq-eq) "==") ((ne) "!=")
-        (else (error "c0c codegen: unknown binop" op))))
-
-    (define (assign-op->c-str op)
-      (case op
-        ((asgn) "=") ((asgn-plus) "+=") ((asgn-minus) "-=") ((asgn-star) "*=")
-        ((asgn-slash) "/=") ((asgn-percent) "%=") ((asgn-amp) "&=") ((asgn-pipe) "|=")
-        ((asgn-caret) "^=") ((asgn-lshift) "<<=") ((asgn-rshift) ">>=")
-        (else (error "c0c codegen: unknown assign op" op))))
-
     (define (emit-stmt stmt depth)
       (emit-indent depth)
       (case (car stmt)
@@ -335,17 +300,6 @@
          (emit (if (eq? (list-ref step 2) '++) "++" "--")))
         (else (error "c0c codegen: unknown for-step" (car step)))))
 
-    (define (zero-init ty)
-      (case (car ty)
-        ((ty-int) "0")
-        ((ty-bool) "false")
-        ((ty-char) "'\\0'")
-        ((ty-string) "\"\"")
-        ((ty-ptr) "NULL")
-        ((ty-arr) "NULL")
-        ((ty-void) "")
-        (else "0")))
-
     (define (emit-gdecl decl)
       (case (car decl)
         ((g-func)
@@ -394,11 +348,6 @@
               (emit-type (caar p))
               (emit " " (cadr (car p)))
               (loop (cdr p) #f)))))
-
-    (define (join-chunks lst)
-      (let ((port (open-output-string)))
-        (for-each (lambda (s) (write-string s port)) lst)
-        (get-output-string port)))
 
     (define (emit-c-program ast . opts)
       (set! emit-contracts

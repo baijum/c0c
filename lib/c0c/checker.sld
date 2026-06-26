@@ -1,5 +1,6 @@
 (define-library (c0c checker)
-  (import (scheme base) (scheme write) (srfi 69))
+  (import (scheme base) (scheme write) (srfi 69)
+          (c0c stdlib))
   (export check-program)
   (begin
 
@@ -451,32 +452,6 @@
                 (hash-table-ref (car scopes) name)
                 (loop (cdr scopes))))))
 
-    (define (register-library-funcs!)
-      (for-each
-        (lambda (entry)
-          (hash-table-set! funcs (car entry) (cdr entry)))
-        (list
-          (cons "print" (cons '(ty-void) (list '(ty-string))))
-          (cons "println" (cons '(ty-void) (list '(ty-string))))
-          (cons "printint" (cons '(ty-void) (list '(ty-int))))
-          (cons "readline" (cons '(ty-string) '()))
-          (cons "string_length" (cons '(ty-int) (list '(ty-string))))
-          (cons "string_charat" (cons '(ty-char)
-                                      (list '(ty-string) '(ty-int))))
-          (cons "string_sub" (cons '(ty-string)
-                                   (list '(ty-string) '(ty-int) '(ty-int))))
-          (cons "string_join" (cons '(ty-string)
-                                    (list '(ty-string) '(ty-string))))
-          (cons "string_compare" (cons '(ty-int)
-                                       (list '(ty-string) '(ty-string))))
-          (cons "string_equal" (cons '(ty-bool)
-                                     (list '(ty-string) '(ty-string))))
-          (cons "string_fromint" (cons '(ty-string) (list '(ty-int))))
-          (cons "string_frombool" (cons '(ty-string) (list '(ty-bool))))
-          (cons "string_fromchar" (cons '(ty-string) (list '(ty-char))))
-          (cons "char_ord" (cons '(ty-int) (list '(ty-char))))
-          (cons "char_chr" (cons '(ty-char) (list '(ty-int)))))))
-
     (define (check-gdecl decl)
       (case (car decl)
         ((g-typedef)
@@ -528,7 +503,7 @@
       (set! typedefs (make-hash-table string=? string-hash))
       (set! env '())
       (set! in-loop #f)
-      (register-library-funcs!)
+      (register-library-funcs! funcs)
       (let ((decls (cadr ast)))
         (for-each
           (lambda (decl)

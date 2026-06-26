@@ -90,9 +90,9 @@
 
 ### Test coverage
 - [x] Test runtime safety: NULL dereference abort message
-- [ ] Test runtime safety: array out-of-bounds abort message
-- [ ] Test runtime safety: division by zero abort message
-- [ ] Test runtime safety: INT32_MIN / -1 abort message
+- [x] Test runtime safety: array out-of-bounds abort message
+- [x] Test runtime safety: division by zero abort message
+- [x] Test runtime safety: INT32_MIN / -1 abort message
 - [ ] Test `--no-check` suppresses contract assertions
 - [ ] Test cross-compilation produces working binaries (needs QEMU or Docker)
 - [ ] Test error messages for all type checker rejections

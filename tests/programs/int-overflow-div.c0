@@ -1,0 +1,6 @@
+int main() {
+  int x = -2147483648;
+  int y = -1;
+  printint(x / y);
+  return 0;
+}

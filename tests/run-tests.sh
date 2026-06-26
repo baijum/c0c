@@ -165,6 +165,15 @@ run_abort_test "null pointer deref" "$C0C_DIR/tests/programs/null-deref.c0" \
 run_abort_test "null arrow access" "$C0C_DIR/tests/programs/null-arrow.c0" \
     "NULL pointer dereference"
 
+run_abort_test "array out of bounds" "$C0C_DIR/tests/programs/array-oob.c0" \
+    "array index 10 out of bounds"
+
+run_abort_test "division by zero" "$C0C_DIR/tests/programs/div-by-zero.c0" \
+    "division by zero"
+
+run_abort_test "INT32_MIN / -1 overflow" "$C0C_DIR/tests/programs/int-overflow-div.c0" \
+    "integer overflow in division"
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1

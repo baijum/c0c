@@ -54,8 +54,10 @@ in sequence. The CLI (`c0c.scm`) writes the emitted C to a temp file and invokes
 |------|-------|-------------|
 | `lib/c0c/lexer.sld` | 352 | Tokenizer. Closure-based (make-lexer returns `(next-fn peek-fn)`). Handles all C0 tokens including multi-char operators (`<<=`, `->`, `&&`) and `//@annotation` comments. |
 | `lib/c0c/parser.sld` | 492 | Recursive descent with Pratt precedence climbing for expressions. Produces tagged-list AST. Tracks known typedefs for declaration/expression disambiguation. |
-| `lib/c0c/checker.sld` | 555 | Type checker. Scope-stack environment, definedness analysis (assignment-before-use), return-on-all-paths, break/continue in loops. Registers library function signatures in `register-library-funcs!`. |
-| `lib/c0c/codegen.sld` | 388 | Emits C code. Accumulates string chunks in a list (not a string port — that crashes Kaappi on large programs). Tracks `var-types` hash table for correct array element casts. |
+| `lib/c0c/checker.sld` | 530 | Type checker. Scope-stack environment, definedness analysis (assignment-before-use), return-on-all-paths, break/continue in loops. |
+| `lib/c0c/codegen.sld` | 358 | Emits C code. Accumulates string chunks in a list (not a string port — that crashes Kaappi on large programs). Tracks `var-types` hash table for correct array element casts. |
+| `lib/c0c/stdlib.sld` | 50 | C0 standard library registry. Function signatures (for checker), library name set and name mangling (for codegen). Single source of truth for built-in functions. |
+| `lib/c0c/codegen-util.sld` | 36 | Pure codegen helpers: operator-to-C-string mappings (`binop->c-str`, `assign-op->c-str`), zero-initialization, chunk joining. |
 | `lib/c0c/driver.sld` | 14 | Wires lex→parse→check→emit. Thin glue. |
 | `c0c.scm` | 81 | CLI. Parses args, calls `compile-c0-to-c`, writes .c file, invokes `zig cc` via `ffi-open`/`ffi-fn` on libc's `system()`. |
 | `runtime/c0rt.h` | 53 | Runtime API: array ops, safe arithmetic, NULL checks, conio, string library. |
