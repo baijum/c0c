@@ -148,6 +148,10 @@ run_test "ensures and \\result" "$C0C_DIR/tests/programs/ensures.c0" \
 7
 60"
 
+run_test "use file include" "$C0C_DIR/tests/programs/use-file.c0" \
+"42
+42"
+
 run_test "comprehensive 1" "$C0C_DIR/tests/programs/comprehensive1.c0" \
 "3
 720

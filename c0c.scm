@@ -2,6 +2,23 @@
         (scheme process-context)
         (c0c driver))
 
+(define (preprocess-source path)
+  (let ((port (open-input-file path)))
+    (let loop ((lines '()))
+      (let ((line (read-line port)))
+        (if (eof-object? line)
+            (begin (close-input-port port)
+                   (apply string-append (reverse lines)))
+            (let ((trimmed (string-copy line)))
+              (if (and (> (string-length trimmed) 6)
+                       (string=? (substring trimmed 0 5) "#use ")
+                       (char=? (string-ref trimmed 5) #\"))
+                  (let* ((end (- (string-length trimmed) 1))
+                         (file-path (substring trimmed 6 end))
+                         (included (preprocess-source file-path)))
+                    (loop (cons (string-append included "\n") lines)))
+                  (loop (cons (string-append line "\n") lines)))))))))
+
 (define libc (ffi-open #f))
 (define c-system (ffi-fn libc "system" '(string) 'int))
 
@@ -59,7 +76,8 @@
   (call-with-values
     (lambda () (parse-args args))
     (lambda (source output emit-c target runtime-dir no-check)
-      (let* ((c-code (compile-c0-to-c source no-check))
+      (let* ((preprocessed (preprocess-source source))
+             (c-code (compile-c0-to-c source no-check preprocessed))
              (c-file (string-append output ".c")))
         (let ((out (open-output-file c-file)))
           (write-string c-code out)
