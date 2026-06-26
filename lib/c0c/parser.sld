@@ -480,6 +480,8 @@
       (let use-loop ((decls '()))
         (if (eq? (tok-tag (lexer-peek lex)) 'use-lib)
             (let ((t (lexer-next lex)))
+              (when (string=? (tok-val t) "file")
+                (hash-table-set! typedefs "file_t" #t))
               (use-loop (cons (list 'g-use (tok-val t)
                                     (tok-line t) (tok-col t))
                               decls)))

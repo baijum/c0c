@@ -174,6 +174,66 @@ char char_chr(int32_t n) {
     return (char)n;
 }
 
+static int c0_argc = 0;
+static char** c0_argv = NULL;
+
+struct c0_arg_reg { char type; c0_string name; void* ptr; };
+static struct c0_arg_reg c0_args[64];
+static int c0_nargs = 0;
+
+void args_flag(c0_string name, bool* ptr) {
+    if (c0_nargs >= 64) c0_abort("too many registered args");
+    c0_args[c0_nargs++] = (struct c0_arg_reg){ 'b', name, ptr };
+}
+
+void args_int(c0_string name, int32_t* ptr) {
+    if (c0_nargs >= 64) c0_abort("too many registered args");
+    c0_args[c0_nargs++] = (struct c0_arg_reg){ 'i', name, ptr };
+}
+
+void args_string(c0_string name, c0_string* ptr) {
+    if (c0_nargs >= 64) c0_abort("too many registered args");
+    c0_args[c0_nargs++] = (struct c0_arg_reg){ 's', name, ptr };
+}
+
+c0_array* args_parse(void) {
+    int pos_count = 0;
+    c0_string* pos_args = malloc(sizeof(c0_string) * (size_t)(c0_argc + 1));
+    if (!pos_args) c0_abort("out of memory");
+    for (int i = 1; i < c0_argc; i++) {
+        char* arg = c0_argv[i];
+        if (arg[0] == '-') {
+            char* name = arg + 1;
+            int found = 0;
+            for (int j = 0; j < c0_nargs; j++) {
+                if (strcmp(c0_args[j].name, name) == 0) {
+                    found = 1;
+                    if (c0_args[j].type == 'b') {
+                        *(bool*)c0_args[j].ptr = true;
+                    } else if (i + 1 < c0_argc) {
+                        i++;
+                        if (c0_args[j].type == 'i') {
+                            *(int32_t*)c0_args[j].ptr = (int32_t)strtol(c0_argv[i], NULL, 10);
+                        } else {
+                            *(c0_string*)c0_args[j].ptr = c0_argv[i];
+                        }
+                    }
+                    break;
+                }
+            }
+            if (!found) pos_args[pos_count++] = arg;
+        } else {
+            pos_args[pos_count++] = arg;
+        }
+    }
+    c0_array* arr = c0_alloc_array(sizeof(c0_string), pos_count);
+    for (int i = 0; i < pos_count; i++)
+        *(c0_string*)(arr->data + (size_t)i * sizeof(c0_string)) = pos_args[i];
+    free(pos_args);
+    c0_nargs = 0;
+    return arr;
+}
+
 struct c0_file { FILE* fp; };
 
 file_t file_read(c0_string path) {
@@ -250,6 +310,8 @@ struct parsed_int* parse_int(c0_string s, int32_t base) {
     return p;
 }
 
-int main(void) {
+int main(int argc, char** argv) {
+    c0_argc = argc;
+    c0_argv = argv;
     return _c0_main();
 }

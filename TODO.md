@@ -3,90 +3,70 @@
 ## Standard Libraries
 
 ### file library
-- [x] Runtime: `file_read`, `file_close`, `file_eof`, `file_readline` implemented in c0rt.c
-- [ ] Compiler: register `file_t` opaque type and function signatures
-- Blocked: kaappi VM bytecode size limit prevents adding registration code to checker.sld
+- [x] Runtime: `file_read`, `file_close`, `file_eof`, `file_readline` in c0rt.c
+- [x] Compiler: `file_t` opaque type + function signatures registered
+- Done: `#use <file>` works end-to-end
 
 ### args library
-- [ ] `void args_flag(string name, bool *ptr)` — register boolean flag
-- [ ] `void args_int(string name, int *ptr)` — register int switch
-- [ ] `void args_string(string name, string *ptr)` — register string switch
-- [ ] `string[] args_parse()` — parse command-line arguments
-- Requires pointer-to-pointer support in the type checker
+- [x] Runtime: `args_flag`, `args_int`, `args_string`, `args_parse` in c0rt.c
+- [x] Compiler: function signatures registered (pointer parameter types)
+- Done: `#use <args>` works end-to-end
 
 ### parse library
-- [x] `struct parsed_bool *parse_bool(string s)` — parse "true"/"false"
-- [x] `struct parsed_int *parse_int(string s, int base)` — parse integer (base 8/10/16)
-- Done: structs + functions in c0rt.c, signatures in stdlib.sld, checker registers structs
+- [x] `parse_bool(string s)` and `parse_int(string s, int base)`
+- Done: structs + functions in c0rt.c, signatures in stdlib.sld
 
 ### string library
-- [x] `string_to_chararray` and `string_from_chararray` — runtime + compiler registration
-- Done: implemented in c0rt.c, signatures registered via checker hook
+- [x] `string_to_chararray` and `string_from_chararray`
+- Done: runtime + compiler registration
 
 ### conio library
-- [x] `printbool`, `printchar`, `eof` — runtime implementation in c0rt.c/h
+- [x] All 7 functions: print, println, printint, printbool, printchar, readline, eof
 
 ### `#use` directives
-- [x] Parse `#use <conio>`, `#use <string>`, `#use <parse>`
+- [x] `#use <conio>`, `#use <string>`, `#use <parse>`, `#use <file>`, `#use <args>`
 - [x] Only link libraries that are actually imported
 - [ ] `#use "filename"` — file inclusion (blocked by VM bytecode limit)
 
 ## Runtime Safety
 
-### NULL-checked pointer dereference
-- [x] All pointer dereferences and arrow accesses route through `c0_deref`
-
-### Garbage collection
-- [ ] Integrate Boehm GC or implement mark-and-sweep in c0rt.c
-- Currently uses `calloc` with no collection
+- [x] NULL-checked pointer dereference (all paths through `c0_deref`)
+- [ ] Garbage collection (uses `calloc` with no GC)
 
 ## Compiler Features
 
-### `\result` in `@ensures`
-- [x] Lexer: `\result` tokenized as `bs-result`
-- [x] Parser: produces `e-result` AST node
-- [x] Checker: returns current function return type
-- [x] Codegen: saves return value to `_c0_result`, checks ensures, then returns
+### Contracts
+- [x] `@requires`, `@ensures`, `@assert`, `@loop_invariant`
+- [x] `\result` in `@ensures` — saves return value, checks postcondition
+- [x] `\length(expr)` in contracts — emits `c0_array_length`
 
-### `\length(e)` in contracts
-- [x] Lexer: `\length` tokenized as `bs-length`
-- [x] Parser: produces `e-length` AST node with expression argument
-- [x] Checker: validates argument, returns int type
-- [x] Codegen: emits `c0_array_length(expr)`
+### Error handling
+- [x] Error messages include line and column numbers
+- [ ] Include source filename in errors (blocked by VM bytecode limit)
+- [ ] Error recovery — report multiple errors (blocked by VM bytecode limit)
 
-### Error recovery
-- [ ] Continue parsing after first error to report multiple errors
-- [ ] Synchronize at statement boundaries
-
-### Error messages
-- [ ] Include source filename in error messages
-- [ ] Show source line with caret at error column
-
-### Multiple source files
-- [ ] Accept multiple `.c0` files on the command line
-
-### Struct equality and copy
-- [ ] More specific error message for struct `==`/`=` attempts
-
-### Array element type in codegen
-- [ ] Annotate AST with resolved types (currently infers from var-types hash)
+### Not yet implemented
+- [ ] `#use "filename"` file inclusion
+- [ ] Multiple source file compilation
+- [ ] Struct equality error message improvement
+- [ ] Array element type annotation on AST
 
 ## Optimization
-
-- [ ] `-O1`/`-O2` for optimized builds
-- [ ] `-g` for debug info
-- [ ] `-S` to emit assembly
+- [ ] `-O1`/`-O2`, `-g`, `-S` flags
 
 ## Testing
+- [x] 29 integration tests (including runtime safety, contracts, all libraries)
+- [x] 53 type checker tests
+- [x] 35 lexer tests
+- [x] `--no-check` contract suppression test
+- [x] Expected-error test infrastructure
+- [x] Cross-compilation emit-c test
+- [x] GitHub Actions CI workflow
+- [ ] Cross-compilation binary execution (needs QEMU)
 
-### Test coverage
-- [x] NULL dereference, array out-of-bounds, division by zero, INT32_MIN / -1
-- [x] Modulo by zero abort
-- [x] `--no-check` suppresses contract assertions
-- [x] Expected-error tests (compile should fail with specific error)
-- [ ] Test cross-compilation (needs QEMU or Docker)
+## VM Bytecode Limit
 
-### Test infrastructure
-- [x] Runtime-abort tests
-- [x] Expected-error tests (`run_error_test` in run-tests.sh)
-- [x] CI workflow (`.github/workflows/ci.yml`)
+The kaappi VM limits per-function bytecode to 1MB (`MAX_CODE_BYTES` in
+`bytecode_file.zig`). This prevents adding more code to the compiler's
+`.sld` library files. Features marked "blocked by VM bytecode limit"
+need this constant raised in the kaappi interpreter.

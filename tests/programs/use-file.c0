@@ -1,0 +1,10 @@
+#use <conio>
+#use "tests/programs/use-file-lib.c0"
+
+int main() {
+  printint(double(21));
+  println("");
+  printint(triple(14));
+  println("");
+  return 0;
+}

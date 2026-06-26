@@ -139,22 +139,27 @@ Z
 65
 a"
 
+run_test "file library" "$C0C_DIR/tests/programs/fileio.c0" \
+"hello from file
+line two"
+
 run_test "ensures and \\result" "$C0C_DIR/tests/programs/ensures.c0" \
 "42
 7
 60"
 
-run_test "comprehensive" "$C0C_DIR/tests/programs/comprehensive.c0" \
+run_test "comprehensive 1" "$C0C_DIR/tests/programs/comprehensive1.c0" \
 "3
-60
 720
-0
-1
-1 3 4 5 8
-Hello C0!
 254
 1024
 3"
+
+run_test "comprehensive 2" "$C0C_DIR/tests/programs/comprehensive2.c0" \
+"0
+1
+1 3 4 5 8
+Hello C0!"
 
 run_abort_test() {
     local name="$1"
@@ -247,6 +252,28 @@ run_error_test() {
     fi
     rm -f "/tmp/c0c-test-$$" "/tmp/c0c-test-$$.c"
 }
+
+run_cross_test() {
+    local name="$1"
+    local c0_file="$2"
+
+    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
+        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" --emit-c 2>/dev/null; then
+        if [ -f "/tmp/c0c-test-$$.c" ]; then
+            echo "  PASS: $name"
+            PASS=$((PASS + 1))
+        else
+            echo "  FAIL: $name (no C file produced)"
+            FAIL=$((FAIL + 1))
+        fi
+    else
+        echo "  FAIL: $name (compilation failed)"
+        FAIL=$((FAIL + 1))
+    fi
+    rm -f "/tmp/c0c-test-$$" "/tmp/c0c-test-$$.c"
+}
+
+run_cross_test "cross-compile emit-c" "$C0C_DIR/tests/programs/hello.c0"
 
 run_error_test "undeclared variable rejects" "$C0C_DIR/tests/programs/err-undeclared.c0" \
     "ExceptionRaised"

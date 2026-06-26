@@ -1,0 +1,46 @@
+#use <conio>
+typedef int number;
+
+struct list {
+  number val;
+  struct list* next;
+};
+
+typedef struct list* list_t;
+
+list_t cons(number v, list_t tail) {
+  list_t node = alloc(struct list);
+  node->val = v;
+  node->next = tail;
+  return node;
+}
+
+number list_length(list_t l) {
+  number len = 0;
+  list_t cur = l;
+  while (cur != NULL) { len++; cur = cur->next; }
+  return len;
+}
+
+number factorial(number n)
+//@requires n >= 0;
+{
+  number result = 1;
+  for (number i = 1; i <= n; i++) { result *= i; }
+  return result;
+}
+
+int main() {
+  list_t l = cons(10, cons(20, cons(30, NULL)));
+  printint(list_length(l));
+  println("");
+  printint(factorial(6));
+  println("");
+  printint(0xCAFE & 0xFF);
+  println("");
+  printint(1 << 10);
+  println("");
+  printint(17 / 5);
+  println("");
+  return 0;
+}

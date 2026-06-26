@@ -45,7 +45,9 @@
     (define all-libraries
       (list (cons "conio" conio-signatures)
             (cons "string" string-signatures)
-            (cons "parse" parse-signatures)))
+            (cons "parse" parse-signatures)
+            (cons "file" '())
+            (cons "args" '())))
 
     (define all-signatures
       (append conio-signatures string-signatures))
@@ -58,7 +60,9 @@
           parse-signatures)
         (for-each (lambda (name) (hash-table-set! ht name #t))
           '("string_from_chararray" "string_to_chararray"
-            "c0_array_length"))
+            "c0_array_length" "file_read" "file_close"
+            "file_eof" "file_readline"
+            "args_flag" "args_int" "args_string" "args_parse"))
         ht))
 
 

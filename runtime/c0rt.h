@@ -59,6 +59,11 @@ void file_close(file_t f);
 bool file_eof(file_t f);
 c0_string file_readline(file_t f);
 
+void args_flag(c0_string name, bool* ptr);
+void args_int(c0_string name, int32_t* ptr);
+void args_string(c0_string name, c0_string* ptr);
+c0_array* args_parse(void);
+
 struct parsed_bool { bool result; };
 struct parsed_int { int32_t result; };
 struct parsed_bool* parse_bool(c0_string s);
