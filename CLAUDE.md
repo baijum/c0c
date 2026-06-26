@@ -6,10 +6,15 @@ to native binaries via C codegen and `zig cc`.
 ## Build & Run
 
 ```bash
-./c0c hello.c0 -o hello          # compile to native binary
-./c0c hello.c0 -o hello --emit-c # stop after C emission (writes hello.c)
+./c0c hello.c0 -o hello                    # compile to native binary
+./c0c hello.c0 -o hello --emit-c           # stop after C emission
 ./c0c hello.c0 --target x86_64-linux -o hello  # cross-compile
-./c0c hello.c0 --no-check -o hello             # disable contract assertions
+./c0c hello.c0 --no-check -o hello         # disable contract assertions
+./c0c hello.c0 -O2 -o hello               # optimized build
+./c0c hello.c0 -g -o hello                # with debug symbols
+./c0c hello.c0 -S -o hello                # emit assembly
+./c0c hello.c0 --gc -o hello              # with Boehm GC
+./c0c lib.c0 main.c0 -o prog             # multiple source files
 ```
 
 The `./c0c` wrapper invokes kaappi with `--no-jit --lib-path lib` and passes
@@ -22,46 +27,51 @@ KAAPPI=/path/to/kaappi ./c0c hello.c0 -o hello
 ## Tests
 
 ```bash
-# Integration tests — compiles and runs 10 C0 programs
+# Integration tests — 33 C0 programs compiled and run
 bash tests/run-tests.sh
 # or with explicit kaappi path:
 KAAPPI=/path/to/kaappi bash tests/run-tests.sh
 
-# Lexer unit tests (30 tests, JIT-safe)
+# Lexer unit tests (35 tests, JIT-safe)
 kaappi --lib-path lib tests/test-lexer.scm
 
-# Type checker unit tests (37 tests, needs --no-jit)
+# Type checker unit tests (70 tests, needs --no-jit)
 kaappi --no-jit --lib-path lib tests/test-checker.scm
 ```
 
-Every change should pass all three test suites before committing.
+138 tests total. Every change should pass all three test suites before committing.
 
 ## Architecture
 
 ```
-C0 source → Lexer → Parser → Checker → Codegen → .c file → zig cc → binary
-                                                      ↑
-                                                  c0rt.c linked in
+C0 source → Preprocessor → Lexer → Parser → Checker → Codegen → .c file → zig cc → binary
+     ↑                                                               ↑
+ #use "file"                                                    c0rt.c linked in
 ```
 
-Pipeline entry point: `driver.sld:compile-c0-to-c` calls lex → parse → check → emit
-in sequence. The CLI (`c0c.scm`) writes the emitted C to a temp file and invokes
-`zig cc -O0 -fwrapv -std=c11` via FFI `system()`.
+Pipeline: `c0c.scm` preprocesses `#use "file"` directives, calls
+`driver.sld:compile-c0-to-c` (lex → parse → check → emit), writes the
+emitted C, and invokes `zig cc` via FFI `system()`.
+
+For multiple source files, the last file is treated as the main file. The
+preprocessor separates `#use <lib>` directives from code and places them
+first. The codegen emits forward declarations for all functions so source
+order doesn't matter.
 
 ## File Map
 
 | File | Lines | What it does |
-|------|-------|-------------|
-| `lib/c0c/lexer.sld` | 352 | Tokenizer. Closure-based (make-lexer returns `(next-fn peek-fn)`). Handles all C0 tokens including multi-char operators (`<<=`, `->`, `&&`) and `//@annotation` comments. |
-| `lib/c0c/parser.sld` | 492 | Recursive descent with Pratt precedence climbing for expressions. Produces tagged-list AST. Tracks known typedefs for declaration/expression disambiguation. |
-| `lib/c0c/checker.sld` | 530 | Type checker. Scope-stack environment, definedness analysis (assignment-before-use), return-on-all-paths, break/continue in loops. |
-| `lib/c0c/codegen.sld` | 358 | Emits C code. Accumulates string chunks in a list (not a string port — that crashes Kaappi on large programs). Tracks `var-types` hash table for correct array element casts. |
-| `lib/c0c/stdlib.sld` | 50 | C0 standard library registry. Function signatures (for checker), library name set and name mangling (for codegen). Single source of truth for built-in functions. |
-| `lib/c0c/codegen-util.sld` | 36 | Pure codegen helpers: operator-to-C-string mappings (`binop->c-str`, `assign-op->c-str`), zero-initialization, chunk joining. |
-| `lib/c0c/driver.sld` | 14 | Wires lex→parse→check→emit. Thin glue. |
-| `c0c.scm` | 81 | CLI. Parses args, calls `compile-c0-to-c`, writes .c file, invokes `zig cc` via `ffi-open`/`ffi-fn` on libc's `system()`. |
-| `runtime/c0rt.h` | 53 | Runtime API: array ops, safe arithmetic, NULL checks, conio, string library. |
-| `runtime/c0rt.c` | 167 | Runtime implementation. `main()` calls `_c0_main()`. |
+|------|------:|-------------|
+| `lib/c0c/lexer.sld` | 395 | Tokenizer. Closure-based (make-lexer returns `(next-fn peek-fn)`). Handles all C0 tokens including multi-char operators (`<<=`, `->`, `&&`), `//@annotation` comments, and `\result`/`\length`/`\old` backslash keywords. |
+| `lib/c0c/parser.sld` | 497 | Recursive descent with Pratt precedence climbing for expressions. Produces tagged-list AST. Tracks known typedefs for declaration/expression disambiguation. Table-driven unary operator parsing. |
+| `lib/c0c/checker.sld` | 578 | Type checker. Scope-stack environment, definedness analysis, return-on-all-paths, break/continue in loops. Error recovery across declarations. Source line display with caret. Library registration hook. Contract `\result`/`\length`/`\old` validation. |
+| `lib/c0c/codegen.sld` | 404 | Emits C code. Forward declarations for all functions. Accumulates string chunks in a list. `\result` saves return value and checks `@ensures` at return. `\old(e)` captures values at function entry. Recursive array element type inference for nested indexing. |
+| `lib/c0c/stdlib.sld` | 95 | C0 standard library registry. Function signatures for checker, library name set and name mangling for codegen. |
+| `lib/c0c/codegen-util.sld` | 36 | Pure codegen helpers: operator-to-C-string mappings, zero-initialization, chunk joining. |
+| `lib/c0c/driver.sld` | 18 | Wires lex→parse→check→emit. Sets source filename for error messages. |
+| `c0c.scm` | 139 | CLI. Parses args (including `-O`/`-g`/`-S`/`--gc`/multi-file), preprocesses `#use "file"`, calls `compile-c0-to-c`, writes .c file, invokes `zig cc`. |
+| `runtime/c0rt.h` | 74 | Runtime API: array ops, safe arithmetic, NULL checks, all 5 standard libraries, Boehm GC macros. |
+| `runtime/c0rt.c` | 332 | Runtime implementation. Boehm GC via `C0_USE_GC` define. `main()` calls `GC_INIT()` when GC enabled. All 5 libraries: conio, string, parse, file, args. |
 | `c0c` | 8 | Shell wrapper — sets `--no-jit`, `--lib-path`, `--runtime` automatically. |
 
 ## Data Representations
@@ -69,7 +79,8 @@ in sequence. The CLI (`c0c.scm`) writes the emitted C to a temp file and invokes
 ### Tokens: `(tag value line col)`
 
 Tags are symbols: `kw-int`, `kw-return`, `ident`, `int-lit`, `string-lit`,
-`char-lit`, `op-plus`, `op-lshift-eq`, `anno-assert`, `lparen`, `semi`, `eof`, etc.
+`char-lit`, `op-plus`, `op-lshift-eq`, `anno-assert`, `bs-result`, `bs-length`,
+`bs-old`, `use-lib`, `lparen`, `semi`, `eof`, etc.
 
 Accessors: `tok-tag`, `tok-val`, `tok-line`, `tok-col` (exported from lexer).
 
@@ -81,23 +92,24 @@ Accessors: `tok-tag`, `tok-val`, `tok-line`, `tok-col` (exported from lexer).
 **Expressions:** `(e-int val ln col)`, `(e-var name ln col)`,
 `(e-binop op lhs rhs ln col)`, `(e-call name args ln col)`,
 `(e-index arr idx ln col)`, `(e-field expr name ln col)`,
-`(e-alloc type ln col)`, `(e-alloc-array type count ln col)`, etc.
+`(e-alloc type ln col)`, `(e-alloc-array type count ln col)`,
+`(e-result ln col)`, `(e-length expr ln col)`, `(e-old expr ln col)`, etc.
 
 **Statements:** `(s-decl type name init ln col)`, `(s-assign lhs op rhs ln col)`,
 `(s-return expr ln col)`, `(s-block stmts ln col)`, `(s-if cond then else ln col)`,
 `(s-while cond body ln col)`, `(s-for init cond step body ln col)`,
-`(s-assert expr ln col)`, `(s-requires expr ln col)`, etc.
+`(s-assert expr ln col)`, `(s-requires expr ln col)`, `(s-ensures expr ln col)`, etc.
 
 **Top-level:** `(g-func ret-type name params body ln col)` (body is `#f` for
 forward declarations), `(g-typedef type name ln col)`,
-`(g-struct-def name fields ln col)`, `(g-struct-decl name ln col)`.
+`(g-struct-def name fields ln col)`, `(g-struct-decl name ln col)`,
+`(g-use lib-name ln col)`.
 
 **Program:** `(program (list-of-gdecls))`.
 
 Assignment operators use `asgn-*` symbols: `asgn`, `asgn-plus`, `asgn-minus`,
 `asgn-star`, `asgn-slash`, `asgn-percent`, `asgn-amp`, `asgn-pipe`,
-`asgn-caret`, `asgn-lshift`, `asgn-rshift`. (Bare `|` is not a valid Scheme
-symbol character, so `'|=` cannot be used.)
+`asgn-caret`, `asgn-lshift`, `asgn-rshift`.
 
 Binary operator names in the AST: `plus`, `minus`, `star`, `slash`, `percent`,
 `amp`, `pipe`, `caret`, `lshift`, `rshift`, `lt`, `le`, `gt`, `ge`, `eq-eq`,
@@ -114,6 +126,9 @@ Unary operators: `neg`, `lognot`, `bitnot`, `deref`.
 - `defined` — hash table: variable name → `#t` (definitely assigned)
 - `in-loop` — boolean
 - `current-ret-type` — type of the function being checked
+- `check-file` — source filename for error messages
+- `source-lines` — vector of source lines for caret display
+- `lib-hook` — optional callback for extra library registrations
 
 `check-stmt` returns `#t` if the statement definitely returns on all paths.
 
@@ -122,20 +137,28 @@ Unary operators: `neg`, `lognot`, `bitnot`, `deref`.
 - `chunks` — list of strings (reversed), joined at end via `join-chunks`
 - `var-types` — hash table: variable name → declared type (for array element casts)
 - `emit-contracts` — boolean (controlled by `--no-check`)
-- `library-funcs` — hash table of names that should NOT be mangled
+- `cur-ensures` — list of `s-ensures` statements for current function
+- `cur-ret-ty` — return type of current function
+- `old-map` — alist mapping `\old` sub-expressions to `_c0_old_N` variable names
 
 ## C Code Generation Rules
 
 - User function `foo` → `_c0_foo` in emitted C. Library functions are not mangled.
+- Forward declarations emitted for all user functions before definitions.
 - `int` → `int32_t`, `bool` → `bool`, `string` → `c0_string`, `T[]` → `c0_array*`
 - Division/modulo → `c0_idiv(a, b)` / `c0_imod(a, b)` (checks div-by-zero + INT32_MIN/-1)
 - Shifts → `c0_ishl(a, b)` / `c0_ishr(a, b)` (masks shift amount to 5 bits)
 - Array access `a[i]` → `(*(elem_type*)c0_array_sub(a, i))` (bounds-checked)
-- Pointer deref `*p` → `*((T*)c0_deref(p))` (NULL-checked, aborts with clean error)
+- Pointer deref `*p` → `*((T*)c0_deref(p))` (NULL-checked)
 - `alloc(T)` → `(T*)c0_alloc(sizeof(T))`
 - `alloc_array(T, n)` → `c0_alloc_array(sizeof(T), n)`
 - Contract annotations → `c0_assert(expr, "s-assert failed at line N")`
-- Compiled with `zig cc -O0 -fwrapv -std=c11` (`-fwrapv` makes signed overflow defined)
+- `\result` → `_c0_result` (declared at return, ensures checked before returning)
+- `\old(e)` → `_c0_old_N` (captured at function entry)
+- `\length(e)` → `c0_array_length(e)`
+- `@ensures` statements are skipped in normal emission and checked at return points
+- Compiled with `zig cc -O{level} -fwrapv -std=c11` (`-fwrapv` makes signed overflow defined)
+- With `--gc`: adds `-DC0_USE_GC -lgc` to link Boehm GC
 
 ## Kaappi Quirks to Know
 
@@ -170,6 +193,13 @@ Unary operators: `neg`, `lognot`, `bitnot`, `deref`.
   `for-each`/`write-string`. Do NOT use `(apply string-append ...)` on large
   lists — it causes stack overflow.
 
+- **VM bytecode limit.** The kaappi VM limits per-function bytecode to 4MB
+  (`MAX_CODE_BYTES` in `bytecode_file.zig`). The compiler's `.sld` files
+  are close to this limit. When adding code, compress existing patterns
+  (merge similar cases, extract helpers, remove blank lines) to stay under.
+  Use module-level mutables instead of adding parameters to `call-with-values`
+  (which has a limit on value count).
+
 ## How to Add a New C0 Feature
 
 1. **Lexer** (`lexer.sld`): add token tag to `scan-token` dispatch and to
@@ -179,14 +209,15 @@ Unary operators: `neg`, `lognot`, `bitnot`, `deref`.
    (`parse-stmt`, `parse-expr`, `parse-gdecl`, etc.). Produce a new AST node.
 
 3. **Checker** (`checker.sld`): add type-checking logic in `check-expr` or
-   `check-stmt`. If it's a new type, update `resolve-type`. If it's a new
-   library function, add to `register-library-funcs!`.
+   `check-stmt`. If it's a new type, update `resolve-type`. For new library
+   functions, register via `lib-hook` in `check-program` or in `c0c.scm`.
 
 4. **Codegen** (`codegen.sld`): add emission in `emit-expr`, `emit-stmt`, or
    `emit-gdecl`. Map the AST node to the correct C code.
 
 5. **Runtime** (`c0rt.h` + `c0rt.c`): if the feature needs runtime support
-   (new safe operation, new library function), add it here.
+   (new safe operation, new library function), add it here. Use `c0_malloc`/
+   `c0_calloc` macros (not raw `malloc`/`calloc`) for GC compatibility.
 
 6. **Tests**: add a `.c0` program in `tests/programs/`, add it to
    `tests/run-tests.sh`, and add checker accept/reject cases to
@@ -200,15 +231,3 @@ Key differences from C: no unions, no casts, no pointer arithmetic, no sizeof,
 no goto/switch/do-while, no floats, no unsigned types, no address-of (`&`),
 no explicit free (garbage-collected), no assignments in expressions,
 bounds-checked arrays, NULL-checked pointers (at runtime).
-
-## What's Not Yet Implemented
-
-- `file` library (file_read, file_close, file_eof, file_readline)
-- `args` library (args_flag, args_int, args_string, args_parse)
-- `parse` library (parse_int, parse_bool)
-- `string_to_chararray` / `string_from_chararray` (declared in runtime but
-  not yet implemented in c0rt.c)
-- Garbage collection (uses `calloc` with no GC — long-running programs leak)
-- `\result` in `@ensures` annotations
-- Multiple source file compilation
-- Error recovery (compiler aborts on first error)
