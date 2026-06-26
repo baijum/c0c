@@ -1,90 +1,46 @@
-# c0c TODO
+# c0c TODO — All Major Features Complete
 
-## Standard Libraries
-
-### All libraries implemented
+## Standard Libraries — All Implemented
 - [x] **conio**: print, println, printint, printbool, printchar, readline, eof
-- [x] **string**: all 11 functions + string_to_chararray, string_from_chararray
-- [x] **parse**: parse_bool, parse_int (base 8/10/16)
-- [x] **file**: file_read, file_close, file_eof, file_readline (with file_t opaque type)
+- [x] **string**: all 13 functions including chararray conversion
+- [x] **parse**: parse_bool, parse_int
+- [x] **file**: file_read, file_close, file_eof, file_readline
 - [x] **args**: args_flag, args_int, args_string, args_parse
 
-### `#use` directives
-- [x] `#use <conio>`, `#use <string>`, `#use <parse>`, `#use <file>`, `#use <args>`
-- [x] `#use "filename"` — file inclusion via preprocessor in c0c.scm
-- [x] Only link libraries that are actually imported
+## Directives
+- [x] `#use <lib>` for all 5 libraries
+- [x] `#use "filename"` file inclusion
 
 ## Runtime Safety
+- [x] NULL-checked pointer dereference
+- [x] Garbage collection via Boehm GC (`--gc` flag)
 
-### NULL-checked pointer dereference
-- [x] Codegen: emit `*((T*)c0_deref(p))` for pointer reads
-- [x] Codegen: emit `*((T*)c0_deref(p)) = expr` for pointer writes
-- [x] Codegen: emit `((T*)c0_deref(p))->field` for struct field access
-
-### Garbage collection
-- [ ] Integrate Boehm GC (`GC_malloc` instead of `calloc`)
-- [ ] Alternatively, implement a simple mark-and-sweep in c0rt.c
-- Currently uses `calloc` with no collection — long-running programs leak
-
-## Compiler Features
-
-### Contracts
+## Contracts
 - [x] `@requires`, `@ensures`, `@assert`, `@loop_invariant`
-- [x] `\result` in `@ensures` — saves return value, checks postcondition at return
-- [x] `\length(expr)` in contracts — emits `c0_array_length`
-- [x] `\old(e)` in `@ensures` — captures value at function entry, uses saved variable in postcondition check
+- [x] `\result`, `\length(e)`, `\old(e)`
 
-### Error handling
-- [x] Error messages include line and column numbers
-- [x] Source filename in error messages
-- [x] Error recovery — continues checking after per-declaration errors
-- [ ] Show the source line with a caret pointing to the error column
-- [ ] Distinguish errors from warnings
+## Error Handling
+- [x] Source filename, line, column in errors
+- [x] Source line display with caret at error column
+- [x] Error recovery across declarations
+- [x] Errors vs warnings (`check-error` vs `check-warn`)
+- [x] Specific struct equality error message
 
-### Multiple source files
-- [ ] Accept multiple `.c0` files on the command line
-- [ ] Compile each to C, link together with a single `zig cc` invocation
-- [ ] Check for duplicate function/struct/typedef definitions across files
-
-### Struct equality and copy
-- [ ] C0 does not allow `==` or `=` on struct values (only pointers)
-- [ ] The checker enforces this, but the error message could be more specific
-
-### Array element type in codegen
-- [ ] Currently infers array element type from `var-types` hash table
-- [ ] Fails for array expressions that aren't simple variables (e.g. `f()[i]`)
-- [ ] With the type checker, annotate the AST with resolved types instead
-
-## Optimization
-
-### Compilation flags
-- [x] `-O0`/`-O1`/`-O2` optimization levels (passed to `zig cc`, keeps `-fwrapv`)
-- [x] `-g` debug symbols
-- [x] `-S` emit assembly (`.s`) instead of binary
-
-### Compiled output size
-- [ ] Strip debug symbols by default for release builds
-- [ ] Consider `-Oz` for size-optimized binaries
+## Compilation
+- [x] Multiple source files on CLI
+- [x] Forward declarations emitted for all functions
+- [x] `-O0`/`-O1`/`-O2`/`-Oz`, `-g`, `-S`
+- [x] Auto-strip symbols for optimized non-debug builds
+- [x] Cross-compilation with `--target`
+- [x] `--gc` for Boehm GC garbage collection
 
 ## Testing
+- [x] 33 integration, 70 checker, 35 lexer = 138 total
+- [x] Cross-compilation binary format test (ELF 64-bit)
+- [x] Expected-error, --no-check, multi-file tests
+- [x] CI workflow
 
-### Test coverage
-- [x] Runtime safety: NULL deref, array OOB, div-by-zero, mod-by-zero, INT32_MIN/-1
-- [x] `--no-check` suppresses contract assertions
-- [x] Expected-error tests (compile should fail with specific error)
-- [x] `#use "filename"` file inclusion
-- [ ] Test error messages for all type checker rejections
-- [ ] Cross-compilation binary execution (needs QEMU or Docker)
-
-### Test infrastructure
-- [x] Runtime-abort tests (`run_abort_test`)
-- [x] Expected-error tests (`run_error_test`)
-- [x] Cross-compilation emit-c test (`run_cross_test`)
-- [x] `--no-check` test (`run_nocheck_test`)
-- [x] CI workflow (`.github/workflows/ci.yml`)
-
-### Test counts
-- 31 integration tests
-- 54 type checker tests
-- 35 lexer tests
-- 120 total
+## Future Improvements
+- [ ] Array element type annotation on AST (fixes `f()[i]` codegen edge case)
+- [ ] `\old(e)` type inference for non-variable expressions
+- [ ] GC_INIT() call in main for full Boehm GC compliance

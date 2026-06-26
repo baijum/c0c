@@ -37,6 +37,7 @@
   (display "  -O0|-O1|-O2|-Oz  Optimization level (default: -O0)\n")
   (display "  -g               Include debug symbols\n")
   (display "  -S               Emit assembly instead of binary\n")
+  (display "  --gc             Enable garbage collection (Boehm GC)\n")
   (newline)
   (exit 1))
 
@@ -51,6 +52,7 @@
 (define opt-level "0")
 (define debug-mode #f)
 (define emit-asm #f)
+(define use-gc #f)
 
 (define (parse-args args)
   (let loop ((args args) (sources '()) (output "a.out")
@@ -83,6 +85,8 @@
       ((string=? (car args) "-g") (set! debug-mode #t)
        (loop (cdr args) sources output emit-c target runtime-dir no-check))
       ((string=? (car args) "-S") (set! emit-asm #t)
+       (loop (cdr args) sources output emit-c target runtime-dir no-check))
+      ((string=? (car args) "--gc") (set! use-gc #t)
        (loop (cdr args) sources output emit-c target runtime-dir no-check))
       ((or (string=? (car args) "-h") (string=? (car args) "--help"))
        (usage))
@@ -120,12 +124,14 @@
                           (if emit-asm "-S " "")
                           (if (and (not debug-mode) (not (string=? opt-level "0")))
                               "-s " "")
+                          (if use-gc "-DC0_USE_GC " "")
                           "-I" rt-dir " "
                           (if target
                               (string-append "-target " target " ")
                               "")
                           c-file " "
                           (if emit-asm "" (string-append rt-dir "/c0rt.c "))
+                          (if (and use-gc (not emit-asm)) "-lgc " "")
                           "-o " out-file)))
               (run-command cmd)
               (delete-file c-file)

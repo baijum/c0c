@@ -1,7 +1,7 @@
 (define-library (c0c driver)
   (import (scheme base) (scheme file) (scheme write)
           (c0c lexer) (c0c parser) (c0c checker) (c0c codegen))
-  (export compile-c0-to-c set-lib-hook! set-check-file!)
+  (export compile-c0-to-c set-lib-hook! set-check-file! check-warn)
   (begin
 
     (define (compile-c0-to-c source-path . opts)

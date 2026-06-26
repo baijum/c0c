@@ -1,5 +1,13 @@
 #define _POSIX_C_SOURCE 200809L
 #include "c0rt.h"
+#ifdef C0_USE_GC
+#include <gc/gc.h>
+#define c0_malloc(sz) GC_MALLOC(sz)
+#define c0_calloc(n, sz) GC_MALLOC((n)*(sz))
+#else
+#define c0_malloc(sz) malloc(sz)
+#define c0_calloc(n, sz) calloc(n, sz)
+#endif
 
 void c0_abort(const char* msg) {
     fprintf(stderr, "c0 runtime error: %s\n", msg);
@@ -11,7 +19,7 @@ void c0_assert(bool cond, const char* msg) {
 }
 
 void* c0_alloc(size_t size) {
-    void* p = calloc(1, size);
+    void* p = c0_calloc(1, size);
     if (!p) c0_abort("out of memory");
     return p;
 }
@@ -23,7 +31,7 @@ void* c0_deref(void* ptr) {
 
 c0_array* c0_alloc_array(int32_t elt_size, int32_t count) {
     if (count < 0) c0_abort("negative array size");
-    c0_array* arr = calloc(1, sizeof(c0_array) + (size_t)count * (size_t)elt_size);
+    c0_array* arr = c0_calloc(1, sizeof(c0_array) + (size_t)count * (size_t)elt_size);
     if (!arr) c0_abort("out of memory");
     arr->count = count;
     arr->elt_size = elt_size;
@@ -99,7 +107,7 @@ c0_string readline(void) {
     size_t len = strlen(buf);
     if (len > 0 && buf[len - 1] == '\n') buf[--len] = '\0';
     if (len > 0 && buf[len - 1] == '\r') buf[--len] = '\0';
-    char* s = malloc(len + 1);
+    char* s = c0_malloc(len + 1);
     if (!s) c0_abort("out of memory");
     memcpy(s, buf, len + 1);
     return s;
@@ -122,7 +130,7 @@ c0_string string_sub(c0_string s, int32_t start, int32_t end) {
     int32_t len = (int32_t)strlen(s);
     if (start < 0 || end < start || end > len) c0_abort("invalid substring range");
     int32_t sublen = end - start;
-    char* r = malloc((size_t)sublen + 1);
+    char* r = c0_malloc((size_t)sublen + 1);
     if (!r) c0_abort("out of memory");
     memcpy(r, s + start, (size_t)sublen);
     r[sublen] = '\0';
@@ -133,7 +141,7 @@ c0_string string_join(c0_string a, c0_string b) {
     if (!a) c0_abort("NULL string");
     if (!b) c0_abort("NULL string");
     size_t la = strlen(a), lb = strlen(b);
-    char* r = malloc(la + lb + 1);
+    char* r = c0_malloc(la + lb + 1);
     if (!r) c0_abort("out of memory");
     memcpy(r, a, la);
     memcpy(r + la, b, lb + 1);
@@ -153,7 +161,11 @@ bool string_equal(c0_string a, c0_string b) {
 c0_string string_fromint(int32_t i) {
     char buf[16];
     snprintf(buf, sizeof(buf), "%d", i);
-    return strdup(buf);
+    size_t slen = strlen(buf);
+    char* dup = c0_malloc(slen + 1);
+    if (!dup) c0_abort("out of memory");
+    memcpy(dup, buf, slen + 1);
+    return dup;
 }
 
 c0_string string_frombool(bool b) {
@@ -161,7 +173,7 @@ c0_string string_frombool(bool b) {
 }
 
 c0_string string_fromchar(char c) {
-    char* s = malloc(2);
+    char* s = c0_malloc(2);
     if (!s) c0_abort("out of memory");
     s[0] = c;
     s[1] = '\0';
@@ -198,7 +210,7 @@ void args_string(c0_string name, c0_string* ptr) {
 
 c0_array* args_parse(void) {
     int pos_count = 0;
-    c0_string* pos_args = malloc(sizeof(c0_string) * (size_t)(c0_argc + 1));
+    c0_string* pos_args = c0_malloc(sizeof(c0_string) * (size_t)(c0_argc + 1));
     if (!pos_args) c0_abort("out of memory");
     for (int i = 1; i < c0_argc; i++) {
         char* arg = c0_argv[i];
@@ -240,7 +252,7 @@ file_t file_read(c0_string path) {
     if (!path) c0_abort("NULL string in file_read");
     FILE* fp = fopen(path, "r");
     if (!fp) c0_abort("file_read: cannot open file");
-    file_t f = malloc(sizeof(struct c0_file));
+    file_t f = c0_malloc(sizeof(struct c0_file));
     if (!f) c0_abort("out of memory");
     f->fp = fp;
     return f;
@@ -264,7 +276,7 @@ c0_string file_readline(file_t f) {
     size_t len = strlen(buf);
     if (len > 0 && buf[len - 1] == '\n') buf[--len] = '\0';
     if (len > 0 && buf[len - 1] == '\r') buf[--len] = '\0';
-    char* s = malloc(len + 1);
+    char* s = c0_malloc(len + 1);
     if (!s) c0_abort("out of memory");
     memcpy(s, buf, len + 1);
     return s;
@@ -280,7 +292,7 @@ c0_array* string_to_chararray(c0_string s) {
 
 c0_string string_from_chararray(c0_array* a) {
     if (!a) c0_abort("NULL array in string_from_chararray");
-    char* s = malloc((size_t)a->count + 1);
+    char* s = c0_malloc((size_t)a->count + 1);
     if (!s) c0_abort("out of memory");
     memcpy(s, a->data, (size_t)a->count);
     s[a->count] = '\0';
@@ -290,7 +302,7 @@ c0_string string_from_chararray(c0_array* a) {
 struct parsed_bool* parse_bool(c0_string s) {
     if (!s) c0_abort("NULL string in parse_bool");
     if (strcmp(s, "true") != 0 && strcmp(s, "false") != 0) return NULL;
-    struct parsed_bool* p = malloc(sizeof(struct parsed_bool));
+    struct parsed_bool* p = c0_malloc(sizeof(struct parsed_bool));
     if (!p) c0_abort("out of memory");
     p->result = (strcmp(s, "true") == 0);
     return p;
@@ -304,7 +316,7 @@ struct parsed_int* parse_int(c0_string s, int32_t base) {
     long val = strtol(s, &endptr, base);
     if (*endptr != '\0') return NULL;
     if (val < INT32_MIN || val > INT32_MAX) return NULL;
-    struct parsed_int* p = malloc(sizeof(struct parsed_int));
+    struct parsed_int* p = c0_malloc(sizeof(struct parsed_int));
     if (!p) c0_abort("out of memory");
     p->result = (int32_t)val;
     return p;
