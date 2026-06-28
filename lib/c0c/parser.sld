@@ -93,7 +93,7 @@
       (parse-ternary lex))
 
     (define (parse-ternary lex)
-      (let ((expr (parse-binop lex 3)))
+      (let ((expr (parse-binop lex 2)))
         (if (eq? (tok-tag (lexer-peek lex)) 'op-question)
             (let* ((q (lexer-next lex))
                    (then-e (parse-expr lex))

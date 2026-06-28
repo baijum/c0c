@@ -161,7 +161,9 @@
                             (and (ptr-type? lt) (ptr-type? rt))
                             (and (ptr-type? lt) (equal? rr '(ty-ptr (ty-void))))
                             (and (equal? rl '(ty-ptr (ty-void))) (ptr-type? rt))
-                            (and (arr-type? lt) (arr-type? rt)))
+                            (and (arr-type? lt) (arr-type? rt))
+                            (and (arr-type? lt) (equal? rr '(ty-ptr (ty-void))))
+                            (and (equal? rl '(ty-ptr (ty-void))) (arr-type? rt)))
                   (check-error
                     (if (or (struct-type? rl) (struct-type? rr))
                         "cannot compare struct values; use pointers"
