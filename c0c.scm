@@ -1,6 +1,7 @@
 (import (scheme base) (scheme file) (scheme write)
         (scheme process-context)
-        (c0c driver))
+        (c0c driver)
+        (c0c runtime-embed))
 
 (define (preprocess-source path)
   (let ((port (open-input-file path)))
@@ -49,6 +50,36 @@
         ((< i 0) ".")
         ((char=? (string-ref path i) #\/) (substring path 0 i))
         (else (loop (- i 1)))))))
+
+(define (string-ends-with? s suffix)
+  (let ((sl (string-length s))
+        (xl (string-length suffix)))
+    (and (>= sl xl)
+         (string=? (substring s (- sl xl) sl) suffix))))
+
+(define (get-user-args)
+  (let ((cl (command-line)))
+    (if (and (pair? (cdr cl))
+             (string-ends-with? (cadr cl) ".scm"))
+        (cddr cl)
+        (cdr cl))))
+
+(define (make-temp-runtime-dir)
+  (let ((tmp (create-temp-file "/tmp/c0c-rt-")))
+    (delete-file tmp)
+    (create-directory tmp)
+    (let ((h-out (open-output-file (string-append tmp "/c0rt.h"))))
+      (write-string c0rt-h-content h-out)
+      (close-output-port h-out))
+    (let ((c-out (open-output-file (string-append tmp "/c0rt.c"))))
+      (write-string c0rt-c-content c-out)
+      (close-output-port c-out))
+    tmp))
+
+(define (cleanup-temp-runtime-dir dir)
+  (delete-file (string-append dir "/c0rt.h"))
+  (delete-file (string-append dir "/c0rt.c"))
+  (delete-directory dir))
 
 (define opt-level "0")
 (define debug-mode #f)
@@ -106,7 +137,7 @@
        (loop (cdr args) (cons (car args) sources) output emit-c target
              runtime-dir)))))
 
-(let ((args (cddr (command-line))))
+(let ((args (get-user-args)))
   (when (null? args) (usage))
   (call-with-values
     (lambda () (parse-args args))
@@ -127,8 +158,12 @@
         (if emit-c
             (begin (display "Wrote ") (display c-file) (newline))
             (let* ((script-dir (path-directory first-source))
-                   (rt-dir (or runtime-dir
-                               (string-append script-dir "/runtime")))
+                   (external-rt
+                     (or runtime-dir
+                         (let ((d (string-append script-dir "/runtime")))
+                           (and (file-exists? (string-append d "/c0rt.h")) d))))
+                   (tmp-dir (if external-rt #f (make-temp-runtime-dir)))
+                   (rt-dir (or external-rt tmp-dir))
                    (out-file (if emit-asm
                                  (string-append output ".s")
                                  output))
@@ -149,5 +184,6 @@
                           "-o " out-file)))
               (run-command cmd)
               (delete-file c-file)
+              (when tmp-dir (cleanup-temp-runtime-dir tmp-dir))
               (when emit-asm
                 (display "Wrote ") (display out-file) (newline))))))))

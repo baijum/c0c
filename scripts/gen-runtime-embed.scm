@@ -1,0 +1,28 @@
+(import (scheme base) (scheme file) (scheme write))
+
+(define (write-file-escaped path out)
+  (let ((port (open-input-file path)))
+    (let loop ()
+      (let ((ch (read-char port)))
+        (cond
+          ((eof-object? ch)
+           (close-input-port port))
+          ((char=? ch #\\) (write-string "\\\\" out) (loop))
+          ((char=? ch #\") (write-string "\\\"" out) (loop))
+          ((char=? ch #\newline) (write-string "\\n" out) (loop))
+          (else (write-char ch out) (loop)))))))
+
+(let ((out (open-output-file "lib/c0c/runtime-embed.sld")))
+  (write-string "(define-library (c0c runtime-embed)\n" out)
+  (write-string "  (import (scheme base))\n" out)
+  (write-string "  (export c0rt-h-content c0rt-c-content)\n" out)
+  (write-string "  (begin\n" out)
+  (write-string "    (define c0rt-h-content \"" out)
+  (write-file-escaped "runtime/c0rt.h" out)
+  (write-string "\")\n" out)
+  (write-string "    (define c0rt-c-content \"" out)
+  (write-file-escaped "runtime/c0rt.c" out)
+  (write-string "\")))\n" out)
+  (close-output-port out))
+
+(display "Generated lib/c0c/runtime-embed.sld\n")

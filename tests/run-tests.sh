@@ -6,13 +6,18 @@ C0C_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PASS=0
 FAIL=0
 
+if [ -n "$C0C" ]; then
+    c0c() { "$C0C" "$@"; }
+else
+    c0c() { "$KAAPPI" --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" "$@" --runtime "$C0C_DIR/runtime"; }
+fi
+
 run_test() {
     local name="$1"
     local c0_file="$2"
     local expected="$3"
 
-    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
-        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" 2>/dev/null; then
+    if c0c "$c0_file" -o "/tmp/c0c-test-$$" 2>/dev/null; then
         local actual
         actual=$(/tmp/c0c-test-$$ 2>&1)
         if [ "$actual" = "$expected" ]; then
@@ -174,8 +179,7 @@ run_abort_test() {
     local c0_file="$2"
     local expected_msg="$3"
 
-    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
-        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" 2>/dev/null; then
+    if c0c "$c0_file" -o "/tmp/c0c-test-$$" 2>/dev/null; then
         local stderr_out
         stderr_out=$(/tmp/c0c-test-$$ 2>&1 >/dev/null; true)
         local exit_code=${PIPESTATUS[0]:-$?}
@@ -218,8 +222,7 @@ run_nocheck_test() {
     local c0_file="$2"
     local expected_msg="$3"
 
-    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
-        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" --no-check 2>/dev/null; then
+    if c0c "$c0_file" -o "/tmp/c0c-test-$$" --no-check 2>/dev/null; then
         local stderr_out
         stderr_out=$(/tmp/c0c-test-$$ 2>&1 >/dev/null; true)
         if echo "$stderr_out" | grep -q "$expected_msg"; then
@@ -247,8 +250,7 @@ run_error_test() {
     local expected_msg="$3"
 
     local err_out
-    err_out=$("$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
-        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" 2>&1; true)
+    err_out=$(c0c "$c0_file" -o "/tmp/c0c-test-$$" 2>&1; true)
     if echo "$err_out" | grep -q "$expected_msg"; then
         echo "  PASS: $name"
         PASS=$((PASS + 1))
@@ -265,8 +267,7 @@ run_cross_test() {
     local name="$1"
     local c0_file="$2"
 
-    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
-        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" --emit-c 2>/dev/null; then
+    if c0c "$c0_file" -o "/tmp/c0c-test-$$" --emit-c 2>/dev/null; then
         if [ -f "/tmp/c0c-test-$$.c" ]; then
             echo "  PASS: $name"
             PASS=$((PASS + 1))
@@ -289,8 +290,7 @@ run_multi_test() {
     local expected="$1"
     shift
 
-    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
-        "$@" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" 2>/dev/null; then
+    if c0c "$@" -o "/tmp/c0c-test-$$" 2>/dev/null; then
         local actual
         actual=$(/tmp/c0c-test-$$ 2>&1)
         if [ "$actual" = "$expected" ]; then
@@ -316,9 +316,7 @@ run_cross_binary_test() {
     local target="$3"
     local expect_fmt="$4"
 
-    if "$KAAPPI" --no-jit --lib-path "$C0C_DIR/lib" "$C0C_DIR/c0c.scm" \
-        "$c0_file" -o "/tmp/c0c-test-$$" --runtime "$C0C_DIR/runtime" \
-        --target "$target" 2>/dev/null; then
+    if c0c "$c0_file" -o "/tmp/c0c-test-$$" --target "$target" 2>/dev/null; then
         if file "/tmp/c0c-test-$$" | grep -q "$expect_fmt"; then
             echo "  PASS: $name"
             PASS=$((PASS + 1))
